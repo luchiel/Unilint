@@ -18,8 +18,8 @@ void Settings::throw_invalid_value_exception(
 void Settings::read_int_option(
     const std::string& section_, const std::string& option_)
 {
-    int value(settings.get<int>(section_ + '.' + option_, IGNORE));
-    if(value < 0 && value != IGNORE)
+    int value(settings.get<int>(section_ + '.' + option_, IGNORE_OPTION));
+    if(value < 0 && value != IGNORE_OPTION)
         throw_invalid_value_exception(
             section_,
             option_,
@@ -112,7 +112,7 @@ Settings::Settings(const std::string& settings_file_name_)
     read_int_option("indentation", "indentation_size");
     if(
         indentation_policy == IP_BY_SIZE &&
-        int_options["indentation_size"] == IGNORE
+        int_options["indentation_size"] == IGNORE_OPTION
     )
         throw LoadSettingsException(
             "indentation_size option must be set "

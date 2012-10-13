@@ -35,7 +35,7 @@ enum NamingStyle
     NS_CAPS_UNDERSCORE,
 };
 
-const int IGNORE = -1;
+const int IGNORE_OPTION = -1;
 
 class Settings
 {
