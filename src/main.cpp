@@ -7,12 +7,14 @@
 #include "exception.h"
 
 #define DEFAULT_SETTINGS_FILE "default_settings.ini"
+#define DEFAULT_RESULTS_FILE "results.txt"
 
 /*
     First argument is a filename
     OR
     --help
     -s="/path/mysettings.settings"
+    -r="/path/results.txt"
 
     tests will be from the outside :P
 */
@@ -31,25 +33,28 @@ int main(int argc, char* argv[])
         }
         else
         {
-            std::string file_to_process(argv[1]); //TODO: quotes for path
+            std::string file_to_process(argv[1]);
             std::string settings_file(DEFAULT_SETTINGS_FILE);
+            std::string results_file(DEFAULT_RESULTS_FILE);
             for(int i = 2; argc > 2; --argc, ++i)
             {
                 std::string argument(argv[i]);
-                //TODO: check if arg can be empty string here
                 if(argument[0] != '-' || argument.size() <= 1)
                     throw ProcessCommandLineException(
                         "Unrecognized argument: " + argument);
-            
+
                 switch(argument[1])
                 {
+                    //TODO: check if name in range!
                     case 's':
-                        //TODO: check if name in range!
                         settings_file = argument.substr(3, argument.size() - 3);
+                        break;
+                    case 'r':
+                        results_file = argument.substr(3, argument.size() - 3);
                         break;
                     default:
                         throw ProcessCommandLineException(
-                            "Unrecognized argument: " + argument); 
+                            "Unrecognized argument: " + argument);
                 }
             }
             Settings settings(settings_file);
