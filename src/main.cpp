@@ -5,6 +5,7 @@
 #include <string>
 #include "settings.h"
 #include "exception.h"
+#include "checker.h"
 
 #define DEFAULT_SETTINGS_FILE "default_settings.ini"
 #define DEFAULT_RESULTS_FILE "results.txt"
@@ -13,8 +14,10 @@
     First argument is a filename
     OR
     --help
+
     -s="/path/mysettings.settings"
     -r="/path/results.txt"
+    -l="cpp"
 
     tests will be from the outside :P
 */
@@ -36,6 +39,7 @@ int main(int argc, char* argv[])
             std::string file_to_process(argv[1]);
             std::string settings_file(DEFAULT_SETTINGS_FILE);
             std::string results_file(DEFAULT_RESULTS_FILE);
+            std::string language("");
             for(int i = 2; argc > 2; --argc, ++i)
             {
                 std::string argument(argv[i]);
@@ -47,10 +51,13 @@ int main(int argc, char* argv[])
                 {
                     //TODO: check if name in range!
                     case 's':
-                        settings_file = argument.substr(3, argument.size() - 3);
+                        settings_file = argument.substr(3);
                         break;
                     case 'r':
-                        results_file = argument.substr(3, argument.size() - 3);
+                        results_file = argument.substr(3);
+                        break;
+                    case 'l':
+                        language = argument.substr(3);
                         break;
                     default:
                         throw ProcessCommandLineException(
@@ -58,7 +65,7 @@ int main(int argc, char* argv[])
                 }
             }
             Settings settings(settings_file);
-            //TODO: Checker, init and run
+            Checker checker(file_to_process, language, settings);
         }
         std::cout << "Job's done." << std::endl;
     }
