@@ -33,13 +33,13 @@ void Settings::read_eb_options(
     std::string value(settings.get<std::string>(section_ + "." + option_, ""));
 
     if(value == "")
-        bool_options[option_] = EB_IGNORE;
+        ext_bool_options[option_] = EB_IGNORE;
     else if(value == "consistent")
-        bool_options[option_] = EB_CONSISTENT;
+        ext_bool_options[option_] = EB_CONSISTENT;
     else if(value == "false")
-        bool_options[option_] = EB_FALSE;
+        ext_bool_options[option_] = EB_FALSE;
     else if(value == "true")
-        bool_options[option_] = EB_TRUE;
+        ext_bool_options[option_] = EB_TRUE;
     else
         throw_invalid_value_exception(value, section_, option_);
 }
@@ -51,9 +51,9 @@ void Settings::read_sb_options(
     std::string value(settings.get<std::string>(section_ + "." + option_, ""));
 
     if(value == "" || value == "false")
-        bool_options[option_] = EB_IGNORE;
+        ext_bool_options[option_] = EB_IGNORE;
     else if(value == "true")
-        bool_options[option_] = EB_TRUE;
+        ext_bool_options[option_] = EB_TRUE;
     else
         throw_invalid_value_exception(value, section_, option_);
 }
@@ -120,9 +120,10 @@ Settings::Settings(const std::string& settings_file_name_)
 
 
     std::string section("limits");
-    read_int_option(section, "maximum_line_length");
+    read_int_option(section, "maximal_line_length");
     read_int_option(section, "maximal_nesting_depth");
-    read_int_option(section, "number_of_separating_newlines_between_blocks");
+    read_int_option(
+        section, "maximal_number_of_separating_newlines_between_blocks");
 
     section = "spaces_and_newlines";
     read_eb_options(section, "spaces_inside_braces");
@@ -133,15 +134,21 @@ Settings::Settings(const std::string& settings_file_name_)
     read_eb_options(section, "extra_indent_for_blocks");
     read_eb_options(section, "start_block_at_newline");
     read_eb_options(section, "else_at_newline");
+    read_eb_options(section, "newline_at_eof");
+    if(ext_bool_options["newline_at_eof"] == EB_CONSISTENT)
+        throw_invalid_value_exception(
+            section, "newline_at_eof", "consistent");
 
     section = "other";
     read_sb_options(section, "compulsory_block_braces");
     read_sb_options(section, "forbid_vertical_alignment");
     read_sb_options(section, "forbid_multiple_expressions_per_line");
+    read_sb_options(section, "forbid_trailing_whitespaces");
     read_sb_options(section, "check_encoding");
     read_sb_options(section, "check_newline_consistency");
 
     section = "naming_styles";
-    read_ns_options(section, "function_naming_style");
     read_ns_options(section, "class_naming_style");
+    read_ns_options(section, "function_naming_style");
+    read_ns_options(section, "variable_naming_style");
 }

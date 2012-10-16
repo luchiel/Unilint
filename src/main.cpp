@@ -3,7 +3,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "settings.h"
 #include "exception.h"
 #include "checker.h"
 
@@ -64,8 +63,10 @@ int main(int argc, char* argv[])
                             "Unrecognized argument: " + argument);
                 }
             }
-            Settings settings(settings_file);
-            Checker checker(file_to_process, language, settings);
+            Checker checker(
+                file_to_process, language, settings_file);
+            checker.process_file();
+            checker.output_results_to_file(results_file);
         }
         std::cout << "Job's done." << std::endl;
     }

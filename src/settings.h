@@ -1,3 +1,6 @@
+#ifndef SETTINGS_H
+#define SETTINGS_H
+
 #include <string>
 #include <map>
 #include <boost/property_tree/ptree.hpp>
@@ -59,9 +62,11 @@ public:
     Settings(const std::string& settings_file_name_);
 
     std::map<std::string, NamingStyle> naming_styles;
-    std::map<std::string, ExtendedBoolean> bool_options;
+    std::map<std::string, ExtendedBoolean> ext_bool_options;
     std::map<std::string, int> int_options;
 
     IndentStyle indentation_style;
     IndentPolicy indentation_policy;
 };
+
+#endif

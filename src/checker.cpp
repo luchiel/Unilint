@@ -2,35 +2,60 @@
 #include <string>
 #include <map>
 #include <algorithm>
+#include <srchilite/langdefmanager.h>
+#include <srchilite/regexrulefactory.h>
+#include <srchilite/sourcehighlighter.h>
+#include <srchilite/formattermanager.h>
 #include "checker.h"
 #include "exception.h"
+#include "pseudoformatter.h"
 
 void Checker::set_language(const std::string& language_)
 {
-    std::map<std::string, Language> languages_aliases;
-    languages_aliases["basic"] = L_BASIC;
-    languages_aliases["bas"] = L_BASIC;
-    languages_aliases["qb"] = L_BASIC;
-    languages_aliases["c"] = L_C;
-    languages_aliases["c++"] = L_CPP;
-    languages_aliases["cpp"] = L_CPP;
-    languages_aliases["cc"] = L_CPP;
-    languages_aliases["c#"] = L_CSHARP;
-    languages_aliases["cs"] = L_CSHARP;
-    languages_aliases["haskell"] = L_HASKELL;
-    languages_aliases["hs"] = L_HASKELL;
-    languages_aliases["java"] = L_JAVA;
-    languages_aliases["pascal"] = L_PASCAL;
-    languages_aliases["lpr"] = L_PASCAL;
-    languages_aliases["pp"] = L_PASCAL;
-    languages_aliases["dpr"] = L_PASCAL;
-    languages_aliases["perl"] = L_PERL;
-    languages_aliases["pl"] = L_PERL;
-    languages_aliases["php"] = L_PHP;
-    languages_aliases["python"] = L_PYTHON;
-    languages_aliases["py"] = L_PYTHON;
-    languages_aliases["ruby"] = L_RUBY;
-    languages_aliases["rb"] = L_RUBY;
+    std::map<std::string, std::pair<Language, std::string>> languages_aliases;
+    std::pair<Language, std::string> temp;
+
+    temp = std::make_pair(L_BASIC, "vb.lang");
+    languages_aliases["basic"] = temp;
+    languages_aliases["bas"] = temp;
+    languages_aliases["qb"] = temp;
+
+    languages_aliases["c"] = std::make_pair(L_C, "c.lang");
+
+    temp = std::make_pair(L_CPP, "cpp.lang");
+    languages_aliases["c++"] = temp;
+    languages_aliases["cpp"] = temp;
+    languages_aliases["cc"] = temp;
+
+    temp = std::make_pair(L_CSHARP, "csharp.lang");
+    languages_aliases["c#"] = temp;
+    languages_aliases["cs"] = temp;
+
+    temp = std::make_pair(L_HASKELL, "haskell.lang");
+    languages_aliases["haskell"] = temp;
+    languages_aliases["hs"] = temp;
+
+    languages_aliases["java"] = temp = std::make_pair(L_JAVA, "java.lang");
+
+    temp = std::make_pair(L_PASCAL, "pascal.lang");
+    languages_aliases["pascal"] = temp;
+    languages_aliases["lpr"] = temp;
+    languages_aliases["pp"] = temp;
+    languages_aliases["dpr"] = temp;
+
+    temp = std::make_pair(L_PERL, "perl.lang");
+    languages_aliases["perl"] = temp;
+    languages_aliases["pl"] = temp;
+
+    languages_aliases["php"] = std::make_pair(L_PHP, "php.lang");
+
+    temp = std::make_pair(L_PYTHON, "python.lang");
+    languages_aliases["python"] = temp;
+    languages_aliases["py"] = temp;
+
+    temp = std::make_pair(L_RUBY, "ruby.lang");
+    languages_aliases["ruby"] = temp;
+    languages_aliases["rb"] = temp;
 
     std::string lowercase(language_);
     std::transform(
@@ -43,18 +68,21 @@ void Checker::set_language(const std::string& language_)
     file_language = lang_iter->second;
 }
 
-void Checker::common_check()
-{
-
-}
-
 Checker::Checker(
     const std::string& filename_,
     const std::string& language_,
-    const Settings& settings_
-)
+    const std::string& settings_
+):
+    file_to_process(filename_.c_str()),
+    settings(settings_),
+    depth(0),
+    current_line(""),
+    empty_lines_counter(0),
+    results()
 {
-    file_to_process.open(filename_.c_str());
+    if(file_to_process.fail())
+        throw UnilintException("File " + filename_ + " not found.");
+
     //TODO: does auto detect for language exist in srchighlite?
     if(language_ == "")
     {
@@ -70,4 +98,103 @@ Checker::Checker(
     {
         set_language(language_);
     }
+}
+
+Checker::~Checker()
+{
+    file_to_process.close();
+}
+
+PseudoFormatterPtr Checker::new_formatter(const std::string& s_)
+{
+    return PseudoFormatterPtr(new PseudoFormatter(
+        results, settings, depth, current_line_index, current_line, s_));
+}
+
+
+void Checker::process_file()
+{
+    srchilite::RegexRuleFactory rule_factory;
+    srchilite::LangDefManager lang_def_manager(&rule_factory);
+    srchilite::SourceHighlighter highlighter(
+        lang_def_manager.getHighlightState(LANG_PATH, file_language.second));
+    srchilite::FormatterManager manager(PseudoFormatterPtr(new PseudoFormatter(
+        results, settings, depth, current_line_index, current_line)));
+
+    manager.addFormatter("cbracket", new_formatter("cbracket"));
+
+    manager.addFormatter("keyword", new_formatter("keyword"));
+    manager.addFormatter("number", new_formatter("number"));
+    manager.addFormatter("label", new_formatter("label"));
+    manager.addFormatter("preproc", new_formatter("preproc"));
+    manager.addFormatter("comment", new_formatter("comment"));
+    manager.addFormatter("string", new_formatter("string"));
+    manager.addFormatter("symbol", new_formatter("symbol"));
+
+    manager.addFormatter("type", new_formatter("type"));
+    manager.addFormatter("usertype", new_formatter("usertype"));
+    //TODO: add typedef rule for types
+    //TODO: add name collector: classes to classes, functions to functions
+    manager.addFormatter("classname", new_formatter("classname"));
+    manager.addFormatter("function", new_formatter("function"));
+    manager.addFormatter("variable", new_formatter("variable"));
+
+    highlighter.setFormatterManager(&manager);
+
+    srchilite::FormatterParams params;
+    highlighter.setFormatterParams(&params);
+
+    for(
+        current_line_index = 1;
+        getline(file_to_process, current_line);
+        ++current_line_index
+    )
+    {
+        check_line_length();
+        check_if_empty();
+        if(current_line.size() != 0)
+        {
+            params.start = 0;
+            highlighter.highlightParagraph(current_line);
+        };
+    }
+    check_newline_at_eof();
+}
+
+void Checker::check_line_length()
+{
+    int max_length = settings.int_options["maximal_line_length"];
+    if(max_length != IGNORE_OPTION && max_length <= current_line.size())
+        results.add(current_line_index, 0, "line too long");
+}
+
+void Checker::check_if_empty()
+{
+    if(current_line.size() == 0)
+    {
+        empty_lines_counter++;
+        int max_number = settings.int_options[
+            "maximal_number_of_separating_newlines_between_blocks"];
+        if(max_number != IGNORE_OPTION && empty_lines_counter > max_number)
+            results.add(current_line_index, 0, "redundant newline");
+    }
+    else
+        empty_lines_counter = 0;
+}
+
+void Checker::check_newline_at_eof()
+{
+    ExtendedBoolean newline_at_eof =
+        settings.ext_bool_options["newline_at_eof"];
+    if(newline_at_eof == EB_TRUE && empty_lines_counter == 0)
+        results.add(current_line_index, 0, "no newline at the end of file");
+    else if(newline_at_eof == EB_FALSE && empty_lines_counter != 0)
+        results.add(current_line_index, 0, "newline at the end of file");
+}
+
+void Checker::output_results_to_file(const std::string& results_)
+{
+    std::ofstream results_stream(results_.c_str());
+    results.output_to_stream(results_stream);
+    results_stream.close();
 }

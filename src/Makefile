@@ -6,10 +6,10 @@ SOURCES = $(wildcard *.cpp)
 OBJECTS = $(addprefix $(OBJECTS_PATH)/, $(SOURCES:.cpp=.o))
 
 export CPATH = $(CURDIR)
-CXXFLAGS += -Wall -Wextra -Wno-unused -Wno-switch -Wno-parentheses
+CXXFLAGS += -Wall -Wextra -Wno-unused -Wno-switch -Wno-parentheses -std=c++0x -Wno-sign-compare
 
 all: $(APPNAME)
-	./$(APPNAME) example.cpp
+	./$(APPNAME) "tests/example.cpp"
 
 test: all
 	$(APPNAME) --test
@@ -29,4 +29,4 @@ $(OBJECTS_PATH)/%.o: %.cpp
 	$(CXX) -c -o $@ -MMD $(CXXFLAGS) $<
 
 $(APPNAME): $(OBJECTS)
-	$(CXX) -o $@ $^
+	$(CXX) -o $@ $^ -lsource-highlight

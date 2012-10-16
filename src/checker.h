@@ -3,14 +3,10 @@
 
 #include <fstream>
 #include <string>
-/*
-#include "srchilite/langdefmanager.h"
-#include "srchilite/regexrulefactory.h"
-#include "srchilite/sourcehighlighter.h"
-#include "srchilite/formattermanager.h"
-#include "infoformatter.h"
-*/
+#include <utility>
 #include "settings.h"
+#include "result_collector.h"
+#include "pseudoformatter.h"
 
 #define LANG_PATH "langs"
 
@@ -33,16 +29,30 @@ class Checker
 {
 private:
     std::ifstream file_to_process;
-    Language file_language;
-    void common_check();
+    std::pair<Language, std::string> file_language;
+    Settings settings;
+    int depth;
+    int current_line_index;
+    std::string current_line;
+    int empty_lines_counter;
+    ResultCollector results;
+
     void set_language(const std::string& language_);
+    PseudoFormatterPtr new_formatter(const std::string& s_);
+
+    void check_line_length();
+    void check_if_empty();
+    void check_newline_at_eof();
+
 public:
     Checker(
         const std::string& filename_,
         const std::string& language_,
-        const Settings& settings_
+        const std::string& settings_
     );
-    ~Checker() { file_to_process.close(); }
+    ~Checker();
+    void process_file();
+    void output_results_to_file(const std::string& results_);
 };
 
 #endif
