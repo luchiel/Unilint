@@ -1,0 +1,29 @@
+#added for functions and procedures
+(keyword,normal,function) =
+  `(\<function|procedure)([[:blank:]]+)([[:alnum:]_]+)`
+
+keyword = "alfa|and|array|case|const|div",
+      "do|downto|else|false|file|for|function|get|goto|if|in",
+      "label|mod|new|not|of|or|pack|packed|page|program",
+      "put|procedure|read|readln|record|repeat|reset|rewrite|set",
+      "text|then|to|true|type|unpack|until|var|while|with|writeln|write"
+        nonsensitive
+
+pasbracket = "begin|end" nonsensitive
+
+comment delim "(*" "*)" multiline nested
+comment delim "{" "}" multiline nested
+
+include "number.lang"
+
+string delim "\"" "\"" escape "\\"
+string delim "'" "'"  escape "\\"
+
+type = "boolean|byte|char|integer|maxint|real" nonsensitive
+
+include "symbols.lang"
+
+include "function.lang"
+
+#added for identifiers
+identifier = '([[:alnum:]_]+)'
