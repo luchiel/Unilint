@@ -38,6 +38,12 @@ enum NamingStyle
     NS_CAPS_UNDERSCORE,
 };
 
+enum NameType
+{
+    NT_CLASS,
+    NT_FUNCTION,
+};
+
 const int IGNORE_OPTION = -1;
 
 class Settings

@@ -39,6 +39,7 @@ void Checker::set_language(const std::string& language_)
 
     temp = std::make_pair(L_PASCAL, "pascal.lang");
     languages_aliases["pascal"] = temp;
+    languages_aliases["pas"] = temp;
     languages_aliases["lpr"] = temp;
     languages_aliases["pp"] = temp;
     languages_aliases["dpr"] = temp;
@@ -75,10 +76,7 @@ Checker::Checker(
 ):
     file_to_process(filename_.c_str()),
     settings(settings_),
-    depth(0),
-    current_line(""),
-    empty_lines_counter(0),
-    results()
+    empty_lines_counter(0)
 {
     if(file_to_process.fail())
         throw UnilintException("File " + filename_ + " not found.");
@@ -108,9 +106,8 @@ Checker::~Checker()
 PseudoFormatterPtr Checker::new_formatter(const std::string& s_)
 {
     return PseudoFormatterPtr(new PseudoFormatter(
-        results, settings, depth, current_line_index, current_line, s_));
+        results, settings, formatter_params, s_));
 }
-
 
 void Checker::process_file()
 {
@@ -118,10 +115,11 @@ void Checker::process_file()
     srchilite::LangDefManager lang_def_manager(&rule_factory);
     srchilite::SourceHighlighter highlighter(
         lang_def_manager.getHighlightState(LANG_PATH, file_language.second));
-    srchilite::FormatterManager manager(PseudoFormatterPtr(new PseudoFormatter(
-        results, settings, depth, current_line_index, current_line)));
+    srchilite::FormatterManager manager(PseudoFormatterPtr(
+        new PseudoFormatter(results, settings, formatter_params)));
 
-    manager.addFormatter("cbracket", new_formatter("cbracket"));
+    manager.addFormatter("cbracket", new_formatter("blockbracket"));
+    manager.addFormatter("pasbracket", new_formatter("blockbracket"));
 
     manager.addFormatter("keyword", new_formatter("keyword"));
     manager.addFormatter("number", new_formatter("number"));
@@ -132,12 +130,20 @@ void Checker::process_file()
     manager.addFormatter("symbol", new_formatter("symbol"));
 
     manager.addFormatter("type", new_formatter("type"));
-    manager.addFormatter("usertype", new_formatter("usertype"));
-    //TODO: add typedef rule for types
-    //TODO: add name collector: classes to classes, functions to functions
+    manager.addFormatter("usertype", new_formatter("classname"));
     manager.addFormatter("classname", new_formatter("classname"));
     manager.addFormatter("function", new_formatter("function"));
-    manager.addFormatter("variable", new_formatter("variable"));
+    manager.addFormatter("identifier", new_formatter("identifier"));
+
+    manager.addFormatter(
+        "keyword_with_following_operation",
+        new_formatter("keyword_with_following_operation"));
+    manager.addFormatter(
+        "keyword_with_following_operation_after_braces",
+        new_formatter("keyword_with_following_operation_after_braces"));
+    manager.addFormatter("switch_labels", new_formatter("switch_labels"));
+    manager.addFormatter("semicolon", new_formatter("semicolon"));
+    manager.addFormatter("brace", new_formatter("brace"));
 
     highlighter.setFormatterManager(&manager);
 
@@ -145,17 +151,18 @@ void Checker::process_file()
     highlighter.setFormatterParams(&params);
 
     for(
-        current_line_index = 1;
-        getline(file_to_process, current_line);
-        ++current_line_index
+        formatter_params.current_line_index = 1;
+        getline(file_to_process, formatter_params.current_line);
+        ++formatter_params.current_line_index
     )
     {
         check_line_length();
         check_if_empty();
-        if(current_line.size() != 0)
+        if(formatter_params.current_line.size() != 0)
         {
             params.start = 0;
-            highlighter.highlightParagraph(current_line);
+            formatter_params.indentation_end = 0;
+            highlighter.highlightParagraph(formatter_params.current_line);
         };
     }
     check_newline_at_eof();
@@ -164,19 +171,24 @@ void Checker::process_file()
 void Checker::check_line_length()
 {
     int max_length = settings.int_options["maximal_line_length"];
-    if(max_length != IGNORE_OPTION && max_length <= current_line.size())
-        results.add(current_line_index, 0, "line too long");
+    if(
+        max_length != IGNORE_OPTION &&
+        max_length <= formatter_params.current_line.size())
+    {
+        results.add(formatter_params.current_line_index, 0, "line too long");
+    }
 }
 
 void Checker::check_if_empty()
 {
-    if(current_line.size() == 0)
+    if(formatter_params.current_line.size() == 0)
     {
         empty_lines_counter++;
         int max_number = settings.int_options[
             "maximal_number_of_separating_newlines_between_blocks"];
         if(max_number != IGNORE_OPTION && empty_lines_counter > max_number)
-            results.add(current_line_index, 0, "redundant newline");
+            results.add(
+                formatter_params.current_line_index, 0, "redundant newline");
     }
     else
         empty_lines_counter = 0;
@@ -187,9 +199,13 @@ void Checker::check_newline_at_eof()
     ExtendedBoolean newline_at_eof =
         settings.ext_bool_options["newline_at_eof"];
     if(newline_at_eof == EB_TRUE && empty_lines_counter == 0)
-        results.add(current_line_index, 0, "no newline at the end of file");
+        results.add(
+            formatter_params.current_line_index, 0,
+            "no newline at the end of file");
     else if(newline_at_eof == EB_FALSE && empty_lines_counter != 0)
-        results.add(current_line_index, 0, "newline at the end of file");
+        results.add(
+            formatter_params.current_line_index, 0,
+            "newline at the end of file");
 }
 
 void Checker::output_results_to_file(const std::string& results_)

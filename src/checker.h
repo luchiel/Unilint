@@ -2,11 +2,13 @@
 #define CHECKER_H
 
 #include <fstream>
+#include <map>
 #include <string>
 #include <utility>
 #include "settings.h"
 #include "result_collector.h"
 #include "pseudoformatter.h"
+#include "pseudoformatter_params.h"
 
 #define LANG_PATH "langs"
 
@@ -31,11 +33,9 @@ private:
     std::ifstream file_to_process;
     std::pair<Language, std::string> file_language;
     Settings settings;
-    int depth;
-    int current_line_index;
-    std::string current_line;
     int empty_lines_counter;
     ResultCollector results;
+    PseudoFormatterParams formatter_params;
 
     void set_language(const std::string& language_);
     PseudoFormatterPtr new_formatter(const std::string& s_);
