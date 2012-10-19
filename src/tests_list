@@ -1,6 +1,0 @@
-#!/bin/bash
-
-./unilint tests/c_tests/braces_spaces_consistent_nospace.c -s=tests/c_tests/braces_spaces_consistent.ini -r=tests/c_tests/braces_spaces_consistent_nospace.result
-./unilint tests/c_tests/braces_spaces_consistent_nospace_noerror.c -s=tests/c_tests/braces_spaces_consistent.ini -r=tests/c_tests/braces_spaces_consistent_nospace_noerror.result
-./unilint tests/c_tests/braces_spaces_consistent_space.c -s=tests/c_tests/braces_spaces_consistent.ini -r=tests/c_tests/braces_spaces_consistent_space.result
-./unilint tests/c_tests/braces_spaces_true.c -s=tests/c_tests/braces_spaces_true.ini -r=tests/c_tests/braces_spaces_true.result
