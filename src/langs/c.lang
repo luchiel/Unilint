@@ -42,6 +42,7 @@ type = "bool|char|double|float|int|long",
 semicolon = ";"
 
 brace = "(|)"
+bracket = "[|]"
 
 include "symbols.lang"
 
