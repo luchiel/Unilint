@@ -10,7 +10,6 @@ void Settings::throw_invalid_value_exception(
     const std::string& value_
 )
 {
-    //TODO: add list of OK values
     throw LoadSettingsException(
         "Invalid value '" + value_ + "'' of " + section_ + "." + option_);
 }
@@ -118,6 +117,10 @@ Settings::Settings(const std::string& settings_file_name_)
             "indentation_size option must be set "
             "when indentation_policy = by_size");
 
+    if(indentation_style == IS_IGNORE && indentation_policy != IP_IGNORE)
+        throw LoadSettingsException(
+            "indentation_policy cannot be checked "
+            "when indentation_style is ignored");
 
     std::string section("limits");
     read_int_option(section, "maximal_line_length");
@@ -129,8 +132,7 @@ Settings::Settings(const std::string& settings_file_name_)
     read_eb_options(section, "spaces_inside_braces");
     read_eb_options(section, "spaces_inside_curly_braces");
     read_eb_options(section, "spaces_inside_brackets");
-    read_eb_options(section, "space_between_function_and_brace");
-    read_eb_options(section, "space_between_if_and_brace");
+    read_eb_options(section, "space_between_keyword_and_brace");
     read_eb_options(section, "extra_indent_for_blocks");
     read_eb_options(section, "start_block_at_newline");
     read_eb_options(section, "else_at_newline");

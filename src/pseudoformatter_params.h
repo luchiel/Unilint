@@ -13,6 +13,7 @@ struct PseudoFormatterParams
     bool indent_was_depth_plus_one;
     int braces_opened;
     int indentation_end;
+    int semicolon_count;
 
     PseudoFormatterParams():
         depth(0), current_line_index(0),
@@ -20,7 +21,8 @@ struct PseudoFormatterParams
         indented_operation_expected_after_braces(false),
         indent_was_depth_plus_one(false),
         braces_opened(0),
-        indentation_end(0) {}
+        indentation_end(0),
+        semicolon_count(0) {}
 };
 
 #endif

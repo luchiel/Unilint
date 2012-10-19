@@ -22,7 +22,8 @@ private:
 
     void prefix_check(const std::string& s);
     void brace_check(const std::string& s_, int start_);
-    void spaces_in_braces_check(int start_, int offset_);
+    void unibracket_check(char c_, int start_);
+    void spaces_in_unibrackets_check(char c_, int start_, int offset_);
     void blockbracket_check(const std::string& s_, int start_);
     void name_style_check(
         const std::string& s_, int start_, const std::string& type_);

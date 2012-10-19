@@ -76,12 +76,13 @@ Checker::Checker(
 ):
     file_to_process(filename_.c_str()),
     settings(settings_),
-    empty_lines_counter(0)
+    empty_lines_counter(0),
+    formatter_params(),
+    results(formatter_params.current_line_index)
 {
     if(file_to_process.fail())
         throw UnilintException("File " + filename_ + " not found.");
 
-    //TODO: does auto detect for language exist in srchighlite?
     if(language_ == "")
     {
         unsigned int dot_position =
@@ -89,7 +90,7 @@ Checker::Checker(
         if(dot_position == std::string::npos)
             throw UnilintException(
                 "Cannot determine source file language: no extension found. "
-                "Use -l directive to specify a language");
+                "Use -l directive to specify language");
         set_language(filename_.substr(dot_position + 1));
     }
     else
@@ -144,6 +145,7 @@ void Checker::process_file()
     manager.addFormatter("switch_labels", new_formatter("switch_labels"));
     manager.addFormatter("semicolon", new_formatter("semicolon"));
     manager.addFormatter("brace", new_formatter("brace"));
+    manager.addFormatter("bracket", new_formatter("bracket"));
 
     highlighter.setFormatterManager(&manager);
 
@@ -162,6 +164,7 @@ void Checker::process_file()
         {
             params.start = 0;
             formatter_params.indentation_end = 0;
+            formatter_params.semicolon_count = 0;
             highlighter.highlightParagraph(formatter_params.current_line);
         };
     }
@@ -175,7 +178,7 @@ void Checker::check_line_length()
         max_length != IGNORE_OPTION &&
         max_length <= formatter_params.current_line.size())
     {
-        results.add(formatter_params.current_line_index, 0, "line too long");
+        results.add(0, "line too long");
     }
 }
 
@@ -187,8 +190,7 @@ void Checker::check_if_empty()
         int max_number = settings.int_options[
             "maximal_number_of_separating_newlines_between_blocks"];
         if(max_number != IGNORE_OPTION && empty_lines_counter > max_number)
-            results.add(
-                formatter_params.current_line_index, 0, "redundant newline");
+            results.add(0, "redundant newline");
     }
     else
         empty_lines_counter = 0;
@@ -199,13 +201,9 @@ void Checker::check_newline_at_eof()
     ExtendedBoolean newline_at_eof =
         settings.ext_bool_options["newline_at_eof"];
     if(newline_at_eof == EB_TRUE && empty_lines_counter == 0)
-        results.add(
-            formatter_params.current_line_index, 0,
-            "no newline at the end of file");
+        results.add(0, "no newline at the end of file");
     else if(newline_at_eof == EB_FALSE && empty_lines_counter != 0)
-        results.add(
-            formatter_params.current_line_index, 0,
-            "newline at the end of file");
+        results.add(0, "newline at the end of file");
 }
 
 void Checker::output_results_to_file(const std::string& results_)

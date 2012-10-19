@@ -31,7 +31,15 @@ int main(int argc, char* argv[])
 
         if(!strcmp(argv[1], "--help"))
         {
-            std::cout << "" << std::endl; //TODO: proper help
+            std::cout <<
+                "usage: unilint <filename> "
+                "[-s=<path_to_settings_file>] "
+                "[-r=<path_to_results_file>] "
+                "[-l=<language>]\n\n"
+                "If -s and -r are not specified, "
+                "default_settings.ini and results.txt are used.\n"
+                "If -l is not specified, unilint tries to "
+                "determine language by file extension.\n";
         }
         else
         {
@@ -68,7 +76,6 @@ int main(int argc, char* argv[])
             checker.process_file();
             checker.output_results_to_file(results_file);
         }
-        std::cout << "Job's done." << std::endl;
     }
     catch(std::exception& e)
     {

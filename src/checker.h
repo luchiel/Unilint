@@ -34,8 +34,8 @@ private:
     std::pair<Language, std::string> file_language;
     Settings settings;
     int empty_lines_counter;
-    ResultCollector results;
     PseudoFormatterParams formatter_params;
+    ResultCollector results;
 
     void set_language(const std::string& language_);
     PseudoFormatterPtr new_formatter(const std::string& s_);

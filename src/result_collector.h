@@ -20,10 +20,13 @@ private:
         void output_to_stream(std::ofstream& results_stream_);
     };
     std::vector<Record> result_records;
+    int& current_line_index;
 
 public:
-    ResultCollector() {}
-    void add(int line_, int index_, const std::string& error_);
+    ResultCollector(int& current_line_index_):
+        current_line_index(current_line_index_) {}
+    void add_with_line(int line_, int index_, const std::string& error_);
+    void add(int index_, const std::string& error_);
     void output_to_stream(std::ofstream& results_stream_);
 };
 

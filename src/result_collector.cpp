@@ -5,7 +5,13 @@ void ResultCollector::Record::output_to_stream(std::ofstream& results_stream_)
     results_stream_ << line << ':' << index + 1 << ": " << error << "\n";
 }
 
-void ResultCollector::add(int line_, int index_, const std::string& error_)
+void ResultCollector::add(int index_, const std::string& error_)
+{
+    add_with_line(current_line_index, index_, error_);
+}
+
+void ResultCollector::add_with_line(
+    int line_, int index_, const std::string& error_)
 {
     result_records.push_back(Record(line_, index_, error_));
 }
