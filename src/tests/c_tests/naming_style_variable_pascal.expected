@@ -1,4 +1,4 @@
-32:5: name avada_kedavra not of style pascal
-33:5: name avadaKedavra not of style pascal
-35:5: name AVADA_KEDAVRA not of style pascal
-36:5: name 111avada_kenTavra not of style pascal
+32:5: name avada_kedavra is not of style pascal
+33:5: name avadaKedavra is not of style pascal
+35:5: name AVADA_KEDAVRA is not of style pascal
+36:5: name 111avada_kenTavra is not of style pascal

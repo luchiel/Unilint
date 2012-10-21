@@ -10,7 +10,7 @@
 27:9: name sabakA is not of style pascal
 28:9: name SABAKA_ is not of style pascal
 29:9: name SaB_aKa is not of style pascal
-32:5: name avada_kedavra not of style camel
-34:5: name AvadaKedavra not of style camel
-35:5: name AVADA_KEDAVRA not of style camel
-36:5: name 111avada_kenTavra not of style camel
+32:5: name avada_kedavra is not of style camel
+34:5: name AvadaKedavra is not of style camel
+35:5: name AVADA_KEDAVRA is not of style camel
+36:5: name 111avada_kenTavra is not of style camel

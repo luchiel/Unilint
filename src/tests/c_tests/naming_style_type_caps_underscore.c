@@ -15,11 +15,11 @@ struct ABC_ABC { int a; };
 struct Abc_abC { int a; };
 
 //functions
-int qwerty_1 { return 1; }
-int Qwerty2 { return 2; }
-int qwertyThree { return 3; }
-int QWERTY_FOUR { return 4; }
-int Querty_5 { return 5; }
+int qwerty_1() { return 1; }
+int Qwerty2() { return 2; }
+int qwertyThree() { return 3; }
+int QWERTY_FOUR() { return 4; }
+int Querty_5() { return 5; }
 
 //typedefs
 typedef sabaka_ int;
