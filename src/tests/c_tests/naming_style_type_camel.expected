@@ -1,0 +1,8 @@
+11:8: name abc_abc is not of style camel
+12:8: name AbcAbc is not of style camel
+14:8: name ABC_ABC is not of style camel
+15:8: name Abc_abC is not of style camel
+25:9: name sabaka_ is not of style camel
+26:9: name SabakA is not of style camel
+28:9: name SABAKA_ is not of style camel
+29:9: name SaB_aKa is not of style camel

@@ -1,0 +1,16 @@
+11:8: name abc_abc is not of style pascal
+13:8: name abcAbc is not of style pascal
+14:8: name ABC_ABC is not of style pascal
+15:8: name Abc_abC is not of style pascal
+19:5: name Qwerty2 is not of style underscore
+20:5: name qwertyThree is not of style underscore
+21:5: name QWERTY_FOUR is not of style underscore
+22:5: name Querty_5 is not of style underscore
+25:9: name sabaka_ is not of style pascal
+27:9: name sabakA is not of style pascal
+28:9: name SABAKA_ is not of style pascal
+29:9: name SaB_aKa is not of style pascal
+32:5: name avada_kedavra not of style camel
+34:5: name AvadaKedavra not of style camel
+35:5: name AVADA_KEDAVRA not of style camel
+36:5: name 111avada_kenTavra not of style camel

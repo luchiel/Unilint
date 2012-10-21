@@ -1,0 +1,8 @@
+12:8: name AbcAbc is not of style underscore
+13:8: name abcAbc is not of style underscore
+14:8: name ABC_ABC is not of style underscore
+15:8: name Abc_abC is not of style underscore
+26:9: name SabakA is not of style underscore
+27:9: name sabakA is not of style underscore
+28:9: name SABAKA_ is not of style underscore
+29:9: name SaB_aKa is not of style underscore

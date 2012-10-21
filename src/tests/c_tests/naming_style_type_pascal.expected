@@ -1,0 +1,8 @@
+11:8: name abc_abc is not of style pascal
+13:8: name abcAbc is not of style pascal
+14:8: name ABC_ABC is not of style pascal
+15:8: name Abc_abC is not of style pascal
+25:9: name sabaka_ is not of style pascal
+27:9: name sabakA is not of style pascal
+28:9: name SABAKA_ is not of style pascal
+29:9: name SaB_aKa is not of style pascal
