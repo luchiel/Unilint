@@ -122,6 +122,8 @@ Settings::Settings(const std::string& settings_file_name_)
             "indentation_policy cannot be checked "
             "when indentation_style is ignored");
 
+    read_eb_options("indentation", "extra_indent_for_blocks");
+
     std::string section("limits");
     read_int_option(section, "maximal_line_length");
     read_int_option(section, "maximal_nesting_depth");
@@ -133,7 +135,6 @@ Settings::Settings(const std::string& settings_file_name_)
     read_eb_options(section, "spaces_inside_curly_braces");
     read_eb_options(section, "spaces_inside_brackets");
     read_eb_options(section, "space_between_keyword_and_brace");
-    read_eb_options(section, "extra_indent_for_blocks");
     read_eb_options(section, "start_block_at_newline");
     read_eb_options(section, "else_at_newline");
     read_eb_options(section, "newline_at_eof");
