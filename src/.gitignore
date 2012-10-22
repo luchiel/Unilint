@@ -1,0 +1,6 @@
+*.result
+langs_all/*
+*~
+objects/*
+unilint
+results.txt
