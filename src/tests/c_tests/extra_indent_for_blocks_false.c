@@ -5,7 +5,7 @@ int abaca()
     {
         //indented block
         return 0;
-    }
+}
 
 int ababaca()
 {
