@@ -20,13 +20,20 @@ private:
 
     std::string element;
 
-    void prefix_check(const std::string& s);
+    void prefix_preprocessing(const std::string& s);
     void brace_check(const std::string& s_, int start_);
     void unibracket_check(char c_, int start_);
     void spaces_in_unibrackets_check(char c_, int start_, int offset_);
     void blockbracket_check(const std::string& s_, int start_);
     void name_style_check(
         const std::string& s_, int start_, const std::string& type_);
+    void indent_error_check(int expected_depth);
+    void whitespace_sequence_check(const std::string& s_, int start_);
+    void token_check(const std::string& s_, int start_);
+    void nesting_depth_check(int start_);
+    void keyword_and_brace_check(const std::string& s_, int start_);
+
+    bool is_opening_blockbracket(const std::string& s_);
 
 public:
     //ToDo: inheritance tree, so no ifs in format()

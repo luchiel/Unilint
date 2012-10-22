@@ -2,9 +2,22 @@
 #include "pseudoformatter.h"
 #include "exception.h"
 
+bool PseudoFormatter::is_opening_blockbracket(const std::string& s_)
+{
+    return s_ == "{" || s_ == "begin";
+}
+
+void PseudoFormatter::indent_error_check(int expected_depth)
+{
+    if(formatter_params.depth_by_fact < expected_depth)
+        results.add(0, "indent too small");
+    else if(formatter_params.depth_by_fact > expected_depth)
+        results.add(0, "indent too deep");
+}
+
 void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
 {
-    if(s_ == "{" || s_ == "begin")
+    if(is_opening_blockbracket(s_))
     {
         formatter_params.depth++;
         ExtendedBoolean& block_at_newline(
@@ -29,7 +42,12 @@ void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
     }
     else
         formatter_params.depth--;
-    //TODO: not only place to change depth
+
+    nesting_depth_check(start_);
+}
+
+void PseudoFormatter::nesting_depth_check(int start_)
+{
     int maximal_nesting_depth = settings.int_options["maximal_nesting_depth"];
     if(
         maximal_nesting_depth != IGNORE_OPTION &&
@@ -37,8 +55,110 @@ void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
     {
         results.add(0, "maximal nesting depth exceeded");
     }
-    //TODO: is it from here?
-    formatter_params.indented_operation_expected = false;
+}
+
+void PseudoFormatter::whitespace_sequence_check(
+    const std::string& s_, int start_)
+{
+    if(start_ + s_.size() == formatter_params.current_line.size())
+    {
+        //suffix
+        ExtendedBoolean trailing =
+            settings.ext_bool_options["forbid_trailing_whitespaces"];
+        if(trailing != EB_IGNORE)
+            results.add(start_, "trailing whitespaces");
+    }
+    else if(start_ == 0)
+    {
+        prefix_preprocessing(s_);
+    }
+    else
+    {
+        //infix
+        ExtendedBoolean vertical =
+            settings.ext_bool_options["forbid_vertical_alignment"];
+        if(vertical != EB_IGNORE && s_.size() > 1)
+            results.add(start_, "more than one whitespace");
+        if(s_[0] != ' ')
+            results.add(start_, "unexpected non-space whitespace character");
+    }
+}
+
+void PseudoFormatter::token_check(const std::string& s_, int start_)
+{
+    //check if compulsory block brackets are present
+    if(
+        formatter_params.indented_operation_expected &&
+        settings.ext_bool_options["compulsory_block_braces"] == EB_TRUE &&
+        element != "blockbracket")
+    {
+        results.add(start_, "block brace expected: { or begin");
+    }
+
+    //check indentation
+    if(
+        start_ == formatter_params.indentation_end && (
+            formatter_params.perform_indentation_size_check ||
+            start_ == 0 && settings.indentation_style != IS_IGNORE))
+    {
+        int indentation_size = 1;
+        if(
+            settings.indentation_style == IS_SPACES &&
+            settings.indentation_policy == IP_BY_SIZE)
+        {
+            indentation_size = settings.int_options["indentation_size"];
+        }
+
+        if(element == "blockbracket")
+        {
+            ExtendedBoolean& ext_extra_indent(
+                settings.ext_bool_options["extra_indent_for_blocks"]);
+
+            if(ext_extra_indent == EB_CONSISTENT)
+            {
+                //TODO: pascal's main begin-end are exceptions
+                ext_extra_indent = formatter_params.depth == 0 && start_ != 0 ?
+                    EB_TRUE : EB_FALSE;
+            }
+
+            if(is_opening_blockbracket(s_))
+            {
+                if(ext_extra_indent == EB_TRUE)
+                    formatter_params.depth++;
+                indent_error_check(formatter_params.depth * indentation_size);
+            }
+            else
+            {
+                indent_error_check(
+                    (formatter_params.depth - 1) * indentation_size);
+                if(ext_extra_indent == EB_TRUE)
+                    formatter_params.depth--;
+            }
+        }
+        else if(formatter_params.indented_operation_expected)
+        {
+            //TODO: complex subexpression like in nested test
+            //depth is ++'d 'till the end of operation
+            indent_error_check((formatter_params.depth + 1) * indentation_size);
+        }
+        else
+        {
+            indent_error_check(formatter_params.depth * indentation_size);
+        }
+    }
+
+    //check if expected brace is found
+    if(
+        formatter_params.indented_operation_expected_after_braces &&
+        formatter_params.braces_opened == 0 &&
+        element != "brace")
+    {
+        results.add(start_, "brace expected");
+        formatter_params.indented_operation_expected_after_braces = false;
+    }
+
+    //indent was checked
+    formatter_params.indented_operation_expected = false;;
 }
 
 void PseudoFormatter::spaces_in_unibrackets_check(
@@ -136,18 +256,12 @@ void PseudoFormatter::brace_check(const std::string& s_, int start_)
     }
 }
 
-void PseudoFormatter::prefix_check(const std::string& s)
+void PseudoFormatter::prefix_preprocessing(const std::string& s)
 {
     if(settings.indentation_style == IS_IGNORE)
         return;
 
     formatter_params.indentation_end = s.size();
-    //TODO: extra_indent_for_blocks = false touched here?
-    if(formatter_params.depth == 0)
-    {
-        results.add(0, "indent too deep");
-        return;
-    }
 
     bool tabs = false;
     bool spaces = false;
@@ -165,7 +279,6 @@ void PseudoFormatter::prefix_check(const std::string& s)
     {
         results.add(0, "tabs and spaces mixed");
         return;
-        //TODO: try futher processing
     }
 
     //replace IS_CONSISTENT with first detected style
@@ -175,18 +288,23 @@ void PseudoFormatter::prefix_check(const std::string& s)
     if(tabs)
     {
         if(settings.indentation_style == IS_SPACES)
+        {
             results.add(0, "tabs found, spaces expected");
-
-        if(s.size() < formatter_params.depth)
-            results.add(0, "indent too small");
-        else if(s.size() > formatter_params.depth)
-            results.add(0, "indent too deep");
+            //indentation_size can be undefined
+            //so tabs cannot be translated to spaces
+            return;
+        }
     }
 
     if(spaces)
     {
         if(settings.indentation_style == IS_TABS)
+        {
             results.add(0, "spaces found, tabs expected");
+            //indentation_size is not stored for style = tabs
+            //so spaces cannot be translated to tabs
+            return;
+        }
 
         if(settings.indentation_policy == IP_IGNORE)
             return;
@@ -194,25 +312,14 @@ void PseudoFormatter::prefix_check(const std::string& s)
         //detect tab_size for IP_CONSISTENT
         if(settings.indentation_policy == IP_CONSISTENT)
         {
-            if(s.size() % formatter_params.depth != 0)
-            {
-                results.add(0, "wrong indent");
-                return;
-            }
-            settings.int_options["indentation_size"] =
-                s.size() / formatter_params.depth;
+            //TODO: does first indent found always have depth one? NO
+            settings.int_options["indentation_size"] = s.size();
             settings.indentation_policy = IP_BY_SIZE;
-            return; //futher checking makes no sence here
         }
-
-        //indentation_size cannot be IGNORE_OPTION at this moment
-        int indentation_size = settings.int_options["indentation_size"];
-
-        if(formatter_params.depth * indentation_size < s.size())
-            results.add(0, "indent too deep");
-        else if(formatter_params.depth * indentation_size > s.size())
-            results.add(0, "indent too small");
     }
+
+    formatter_params.depth_by_fact = s.size();
+    formatter_params.perform_indentation_size_check = true;
 }
 
 void PseudoFormatter::name_style_check(
@@ -220,7 +327,6 @@ void PseudoFormatter::name_style_check(
 {
     NamingStyle ns = settings.naming_styles[type_];
     bool style_error = false;
-    //TODO: check style definition and std_functions are correct
     if(ns == NS_CAMEL || ns == NS_PASCAL)
     {
         style_error =
@@ -254,6 +360,34 @@ void PseudoFormatter::name_style_check(
     }
 }
 
+void PseudoFormatter::keyword_and_brace_check(const std::string& s_, int start_)
+{
+    ExtendedBoolean& space(
+        settings.ext_bool_options["space_between_keyword_and_brace"]);
+
+    int keyword_end = start_ + s_.size();
+    if(keyword_end == formatter_params.current_line.size())
+        return;
+
+    if(space == EB_CONSISTENT)
+    {
+        space = formatter_params.current_line[keyword_end] == ' ' ?
+            EB_TRUE : EB_FALSE;
+    }
+    else if(
+        space == EB_TRUE &&
+        formatter_params.current_line[keyword_end] != ' ')
+    {
+        results.add(keyword_end, "no space after " + s_);
+    }
+    else if(
+        space == EB_FALSE &&
+        formatter_params.current_line[keyword_end] == ' ')
+    {
+        results.add(keyword_end, "space after " + s_);
+    }
+}
+
 void PseudoFormatter::format(
     const std::string& s, const srchilite::FormatterParams* params)
 {
@@ -262,15 +396,12 @@ void PseudoFormatter::format(
 
     if(element != "normal")
     {
-        if(
-            formatter_params.indented_operation_expected &&
-            settings.ext_bool_options["compulsory_block_braces"] == EB_TRUE &&
-            element != "blockbracket")
-        {
-            results.add(params->start, "block brace expected: { or begin");
-            //TODO: next line belongs to other place
-            formatter_params.indented_operation_expected = false;
-        }
+        token_check(s, params->start);
+    }
+    else
+    {
+        whitespace_sequence_check(s, params->start);
+        return;
     }
 
     if(element == "blockbracket")
@@ -283,6 +414,8 @@ void PseudoFormatter::format(
     {
         NameType name_type = (element == "classname" ? NT_CLASS : NT_FUNCTION);
         auto name_in_list = formatter_params.list_of_names.find(s);
+        //TODO: constructors in C++ are exceptions:
+        //look at other langs and repair them
         if(
             name_in_list == formatter_params.list_of_names.end() ||
             name_in_list->second != name_type)
@@ -295,39 +428,12 @@ void PseudoFormatter::format(
     }
     else if(element == "identifier")
     {
+        //check if identifier is not known classname or function
         if(
             formatter_params.list_of_names.find(s) ==
             formatter_params.list_of_names.end())
         {
             name_style_check(s, params->start, "variable_naming_style");
-        }
-        //else name is classname/function, and comments about style were given
-    }
-    else if(element == "normal")
-    {
-        //TODO: check, check,, check! that it includes only empty chars now
-        if(params->start == 0)
-        {
-            prefix_check(s);
-        }
-        else if(
-            params->start + s.size() == formatter_params.current_line.size())
-        {
-            //suffix
-            ExtendedBoolean trailing =
-                settings.ext_bool_options["forbid_trailing_whitespaces"];
-            if(trailing != EB_IGNORE)
-                results.add(params->start, "trailing whitespaces");
-        }
-        else
-        {
-            //infix
-            ExtendedBoolean vertical =
-                settings.ext_bool_options["forbid_vertical_alignment"];
-            if(vertical != EB_IGNORE && s.size() > 1)
-                results.add(params->start, "more than 1 whitespace");
-            if(s[0] != ' ')
-                results.add(params->start, "unexpected whitespace character");
         }
     }
     else if(element == "keyword_with_following_operation")
@@ -337,30 +443,7 @@ void PseudoFormatter::format(
     else if(element == "keyword_with_following_operation_after_braces")
     {
         formatter_params.indented_operation_expected_after_braces = true;
-        ExtendedBoolean& space(
-            settings.ext_bool_options["space_between_keyword_and_brace"]);
-
-        int keyword_end = params->start + s.size();
-        if(keyword_end == formatter_params.current_line.size())
-            return;
-
-        if(space == EB_CONSISTENT)
-        {
-            space = formatter_params.current_line[keyword_end] == ' ' ?
-                EB_TRUE : EB_FALSE;
-        }
-        else if(
-            space == EB_TRUE &&
-            formatter_params.current_line[keyword_end] != ' ')
-        {
-            results.add(keyword_end, "no space after " + s);
-        }
-        else if(
-            space == EB_FALSE &&
-            formatter_params.current_line[keyword_end] == ' ')
-        {
-            results.add(keyword_end, "space after " + s);
-        }
+        keyword_and_brace_check(s, params->start);
     }
     else if(element == "switch_labels")
     {
@@ -368,7 +451,8 @@ void PseudoFormatter::format(
     }
     else if(element == "semicolon")
     {
-        formatter_params.semicolon_count++;
+        //formatter_params.semicolon_count++;
+        //lang-dependent
         //trig operation to false
         //TODO: for(;;)
     }
