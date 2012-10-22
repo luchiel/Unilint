@@ -128,6 +128,7 @@ void Checker::process_file()
     manager.addFormatter("preproc", new_formatter("preproc"));
     manager.addFormatter("comment", new_formatter("comment"));
     manager.addFormatter("string", new_formatter("string"));
+    manager.addFormatter("specialchar", new_formatter("string"));
     manager.addFormatter("symbol", new_formatter("symbol"));
 
     manager.addFormatter("type", new_formatter("type"));
@@ -154,17 +155,20 @@ void Checker::process_file()
 
     for(
         formatter_params.current_line_index = 1;
-        getline(file_to_process, formatter_params.current_line);
+        file_to_process.good();
         ++formatter_params.current_line_index
     )
     {
+        getline(file_to_process, formatter_params.current_line);
         check_line_length();
         check_if_empty();
         if(formatter_params.current_line.size() != 0)
         {
             params.start = 0;
+            formatter_params.depth_by_fact = 0;
             formatter_params.indentation_end = 0;
-            formatter_params.semicolon_count = 0;
+            formatter_params.operation_per_line_count = 0;
+            formatter_params.perform_indentation_size_check = false;
             highlighter.highlightParagraph(formatter_params.current_line);
         };
     }
@@ -203,7 +207,9 @@ void Checker::check_newline_at_eof()
     if(newline_at_eof == EB_TRUE && empty_lines_counter == 0)
         results.add(0, "no newline at the end of file");
     else if(newline_at_eof == EB_FALSE && empty_lines_counter != 0)
-        results.add(0, "newline at the end of file");
+        results.add(
+            formatter_params.current_line_index - 1, 0,
+            "newline at the end of file");
 }
 
 void Checker::output_results_to_file(const std::string& results_)
