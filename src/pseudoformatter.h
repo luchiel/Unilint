@@ -32,6 +32,7 @@ private:
     void token_check(const std::string& s_, int start_);
     void nesting_depth_check(int start_);
     void keyword_and_brace_check(const std::string& s_, int start_);
+    void else_check(const std::string s_, int start_);
 
     bool is_opening_blockbracket(const std::string& s_);
 

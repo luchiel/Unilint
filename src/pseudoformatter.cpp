@@ -388,6 +388,26 @@ void PseudoFormatter::keyword_and_brace_check(const std::string& s_, int start_)
     }
 }
 
+void PseudoFormatter::else_check(const std::string s_, int start_)
+{
+    ExtendedBoolean& at_newline(settings.ext_bool_options["else_at_newline"]);
+    if(at_newline == EB_CONSISTENT)
+    {
+        at_newline = start_ == formatter_params.indentation_end ?
+            EB_TRUE : EB_FALSE;
+    }
+    else if(at_newline == EB_TRUE && start_ != formatter_params.indentation_end)
+    {
+        results.add(start_, "else is not at new line");
+    }
+    else if(
+        at_newline == EB_FALSE && start_ == formatter_params.indentation_end)
+    {
+        //TODO: previous was not brace => oops
+        results.add(start_, "else is at new line");
+    }
+}
+
 void PseudoFormatter::format(
     const std::string& s, const srchilite::FormatterParams* params)
 {
@@ -439,6 +459,8 @@ void PseudoFormatter::format(
     else if(element == "keyword_with_following_operation")
     {
         formatter_params.indented_operation_expected = true;
+        if(s == "else")
+            else_check(s, params->start);
     }
     else if(element == "keyword_with_following_operation_after_braces")
     {
