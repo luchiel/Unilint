@@ -14,8 +14,7 @@ void Settings::throw_invalid_value_exception(
         "Invalid value '" + value_ + "'' of " + section_ + "." + option_);
 }
 
-void Settings::read_int_option(
-    const std::string& section_, const std::string& option_)
+void Settings::read_int_option(const std::string& section_, const std::string& option_)
 {
     int value(settings.get<int>(section_ + '.' + option_, IGNORE_OPTION));
     if(value < 0 && value != IGNORE_OPTION)
@@ -26,8 +25,7 @@ void Settings::read_int_option(
     int_options[option_] = value;
 }
 
-void Settings::read_eb_options(
-    const std::string& section_, const std::string& option_)
+void Settings::read_eb_options(const std::string& section_, const std::string& option_)
 {
     std::string value(settings.get<std::string>(section_ + "." + option_, ""));
 
@@ -43,8 +41,7 @@ void Settings::read_eb_options(
         throw_invalid_value_exception(value, section_, option_);
 }
 
-void Settings::read_sb_options(
-    const std::string& section_, const std::string& option_)
+void Settings::read_sb_options(const std::string& section_, const std::string& option_)
 {
     //simple boolean is stored as extended, but can be either true or ignored
     std::string value(settings.get<std::string>(section_ + "." + option_, ""));
@@ -58,8 +55,7 @@ void Settings::read_sb_options(
 }
 
 
-void Settings::read_ns_options(
-    const std::string& section_, const std::string& option_)
+void Settings::read_ns_options(const std::string& section_, const std::string& option_)
 {
     std::string value(settings.get<std::string>(section_ + "." + option_, ""));
 
@@ -94,8 +90,7 @@ Settings::Settings(const std::string& settings_file_name_)
     else if(value == "spaces")
         indentation_style = IS_SPACES;
     else
-        throw_invalid_value_exception(
-            value, "indentation", "indentation_style");
+        throw_invalid_value_exception(value, "indentation", "indentation_style");
 
     value = settings.get<std::string>("indentation.indentation_policy", "");
     if(value == "")
@@ -105,30 +100,23 @@ Settings::Settings(const std::string& settings_file_name_)
     else if(value == "by_size")
         indentation_policy = IP_BY_SIZE;
     else
-        throw_invalid_value_exception(
-            value, "indentation", "indentation_policy");
+        throw_invalid_value_exception(value, "indentation", "indentation_policy");
 
     read_int_option("indentation", "indentation_size");
-    if(
-        indentation_policy == IP_BY_SIZE &&
-        int_options["indentation_size"] == IGNORE_OPTION
-    )
+    if(indentation_policy == IP_BY_SIZE && int_options["indentation_size"] == IGNORE_OPTION)
         throw LoadSettingsException(
-            "indentation_size option must be set "
-            "when indentation_policy = by_size");
+            "indentation_size option must be set when indentation_policy = by_size");
 
     if(indentation_style == IS_IGNORE && indentation_policy != IP_IGNORE)
         throw LoadSettingsException(
-            "indentation_policy cannot be checked "
-            "when indentation_style is ignored");
+            "indentation_policy cannot be checked when indentation_style is ignored");
 
     read_eb_options("indentation", "extra_indent_for_blocks");
 
     std::string section("limits");
     read_int_option(section, "maximal_line_length");
     read_int_option(section, "maximal_nesting_depth");
-    read_int_option(
-        section, "maximal_number_of_separating_newlines_between_blocks");
+    read_int_option(section, "maximal_number_of_separating_newlines_between_blocks");
 
     section = "spaces_and_newlines";
     read_eb_options(section, "spaces_inside_braces");
@@ -139,8 +127,7 @@ Settings::Settings(const std::string& settings_file_name_)
     read_eb_options(section, "else_at_newline");
     read_eb_options(section, "newline_at_eof");
     if(ext_bool_options["newline_at_eof"] == EB_CONSISTENT)
-        throw_invalid_value_exception(
-            section, "newline_at_eof", "consistent");
+        throw_invalid_value_exception(section, "newline_at_eof", "consistent");
 
     section = "other";
     read_sb_options(section, "compulsory_block_braces");

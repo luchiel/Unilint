@@ -25,8 +25,7 @@ private:
     void unibracket_check(char c_, int start_);
     void spaces_in_unibrackets_check(char c_, int start_, int offset_);
     void blockbracket_check(const std::string& s_, int start_);
-    void name_style_check(
-        const std::string& s_, int start_, const std::string& type_);
+    void name_style_check(const std::string& s_, int start_, const std::string& type_);
     void indent_error_check(int expected_depth);
     void whitespace_sequence_check(const std::string& s_, int start_);
     void token_check(const std::string& s_, int start_);
@@ -44,11 +43,13 @@ public:
         PseudoFormatterParams& formatter_params_,
         std::string element_ = "normal"
     ):
-        results(results_), settings(settings_),
-        formatter_params(formatter_params_), element(element_) {}
+        results(results_),
+        settings(settings_),
+        formatter_params(formatter_params_),
+        element(element_)
+    {}
 
-    virtual void format(
-        const std::string& s, const srchilite::FormatterParams* params = 0);
+    virtual void format(const std::string& s, const srchilite::FormatterParams* params = 0);
 };
 
 typedef boost::shared_ptr<PseudoFormatter> PseudoFormatterPtr;

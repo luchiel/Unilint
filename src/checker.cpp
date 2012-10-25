@@ -59,8 +59,7 @@ void Checker::set_language(const std::string& language_)
     languages_aliases["rb"] = temp;
 
     std::string lowercase(language_);
-    std::transform(
-        language_.begin(), language_.end(), lowercase.begin(), ::tolower);
+    std::transform(language_.begin(), language_.end(), lowercase.begin(), ::tolower);
 
     auto lang_iter = languages_aliases.find(lowercase);
     if(lang_iter == languages_aliases.end())
@@ -85,8 +84,7 @@ Checker::Checker(
 
     if(language_ == "")
     {
-        unsigned int dot_position =
-            filename_.find_last_of(".", filename_.size() - 2);
+        unsigned int dot_position = filename_.find_last_of(".", filename_.size() - 2);
         if(dot_position == std::string::npos)
             throw UnilintException(
                 "Cannot determine source file language: no extension found. "
@@ -138,8 +136,7 @@ void Checker::process_file()
     manager.addFormatter("identifier", new_formatter("identifier"));
 
     manager.addFormatter(
-        "keyword_with_following_operation",
-        new_formatter("keyword_with_following_operation"));
+        "keyword_with_following_operation", new_formatter("keyword_with_following_operation"));
     manager.addFormatter(
         "keyword_with_following_operation_after_braces",
         new_formatter("keyword_with_following_operation_after_braces"));
@@ -178,9 +175,7 @@ void Checker::process_file()
 void Checker::check_line_length()
 {
     int max_length = settings.int_options["maximal_line_length"];
-    if(
-        max_length != IGNORE_OPTION &&
-        max_length <= formatter_params.current_line.size())
+    if(max_length != IGNORE_OPTION && max_length <= formatter_params.current_line.size())
     {
         results.add(0, "line too long");
     }
@@ -191,8 +186,7 @@ void Checker::check_if_empty()
     if(formatter_params.current_line.size() == 0)
     {
         empty_lines_counter++;
-        int max_number = settings.int_options[
-            "maximal_number_of_separating_newlines_between_blocks"];
+        int max_number = settings.int_options["maximal_number_of_separating_newlines_between_blocks"];
         if(max_number != IGNORE_OPTION && empty_lines_counter > max_number)
             results.add(0, "redundant newline");
     }
@@ -207,9 +201,7 @@ void Checker::check_newline_at_eof()
     if(newline_at_eof == EB_TRUE && empty_lines_counter == 0)
         results.add(0, "no newline at the end of file");
     else if(newline_at_eof == EB_FALSE && empty_lines_counter != 0)
-        results.add(
-            formatter_params.current_line_index - 1, 0,
-            "newline at the end of file");
+        results.add(formatter_params.current_line_index - 1, 0, "newline at the end of file");
 }
 
 void Checker::output_results_to_file(const std::string& results_)

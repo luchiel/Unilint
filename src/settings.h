@@ -51,14 +51,10 @@ class Settings
 private:
     boost::property_tree::ptree settings;
 
-    void read_int_option(
-        const std::string& section_, const std::string& option_);
-    void read_eb_options(
-        const std::string& section_, const std::string& option_);
-    void read_sb_options(
-        const std::string& section_, const std::string& option_);
-    void read_ns_options(
-        const std::string& section_, const std::string& option_);
+    void read_int_option(const std::string& section_, const std::string& option_);
+    void read_eb_options(const std::string& section_, const std::string& option_);
+    void read_sb_options(const std::string& section_, const std::string& option_);
+    void read_ns_options(const std::string& section_, const std::string& option_);
     void throw_invalid_value_exception(
         const std::string& section_,
         const std::string& option_,

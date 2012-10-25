@@ -20,7 +20,8 @@ struct PseudoFormatterParams
     bool perform_indentation_size_check;
 
     PseudoFormatterParams():
-        depth(0), current_line_index(0),
+        depth(0),
+        current_line_index(0),
         indented_operation_expected(false),
         indented_operation_expected_after_braces(false),
         braces_opened(0),
