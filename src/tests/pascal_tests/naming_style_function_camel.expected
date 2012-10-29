@@ -1,0 +1,6 @@
+2:10: name PascalStyle is not of style camel
+3:10: name underscore_style is not of style camel
+4:10: name CAPS_UNDERSCORE_STYLE is not of style camel
+14:11: name PascalMe is not of style camel
+15:11: name un_sco is not of style camel
+16:11: name CAPS_UN_SCO is not of style camel
