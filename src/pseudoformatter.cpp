@@ -54,18 +54,19 @@ void PseudoFormatter::whitespace_sequence_check(
 {
     if(start_ + s_.size() == formatter_params.current_line.size())
     {
-        //suffix
         ExtendedBoolean trailing = settings.ext_bool_options["forbid_trailing_whitespaces"];
         if(trailing != EB_IGNORE)
             results.add(start_, "trailing whitespaces");
     }
     else if(start_ == 0)
     {
-        prefix_preprocessing(s_);
+        formatter_params.indentation_end = s_.size();
+
+        if(settings.indentation_style != IS_IGNORE)
+            prefix_preprocessing(s_);
     }
     else
     {
-        //infix
         ExtendedBoolean vertical = settings.ext_bool_options["forbid_vertical_alignment"];
         if(vertical != EB_IGNORE && s_.size() > 1)
             results.add(start_, "more than one whitespace");
@@ -144,7 +145,7 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
     }
 
     //indent was checked
-    formatter_params.indented_operation_expected = false;;
+    formatter_params.indented_operation_expected = false;
 }
 
 void PseudoFormatter::spaces_in_unibrackets_check(
@@ -237,11 +238,6 @@ void PseudoFormatter::brace_check(const std::string& s_, int start_)
 
 void PseudoFormatter::prefix_preprocessing(const std::string& s)
 {
-    if(settings.indentation_style == IS_IGNORE)
-        return;
-
-    formatter_params.indentation_end = s.size();
-
     bool tabs = false;
     bool spaces = false;
     for(unsigned int i = 0; i < s.size(); ++i)
@@ -398,9 +394,27 @@ void PseudoFormatter::format(
 
     if(element == "blockbracket")
     {
+        if(is_opening_blockbracket(s))
+            formatter_params.section.push(S_CODE);
+        else
+            formatter_params.section.pop();
+
         blockbracket_check(s, params->start);
         if(s == "{" || s == "}")
             unibracket_check(s[0], params->start);
+    }
+    else if(element == "varblock")
+    {
+        formatter_params.section.top() = S_VAR;
+        //TODO: var in function params
+    }
+    else if(element == "typeblock")
+    {
+        formatter_params.section.top() = S_TYPE;
+    }
+    else if(element == "keyword_declaring_varblock")
+    {
+        formatter_params.section.push(S_VAR);
     }
     else if(element == "classname" || element == "function")
     {
@@ -417,8 +431,12 @@ void PseudoFormatter::format(
     }
     else if(element == "identifier")
     {
-        //check if identifier is not known classname or function
-        if(formatter_params.list_of_names.find(s) == formatter_params.list_of_names.end())
+        if(formatter_params.section.top() == S_TYPE)
+        {
+            formatter_params.list_of_names[s] = NT_CLASS;
+            name_style_check(s, params->start, "class_naming_style");
+        }
+        else if(formatter_params.list_of_names.find(s) == formatter_params.list_of_names.end())
         {
             name_style_check(s, params->start, "variable_naming_style");
         }

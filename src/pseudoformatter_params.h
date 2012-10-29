@@ -1,6 +1,10 @@
 #ifndef PSEUDOFORMATTER_PARAMS_H
 #define PSEUDOFORMATTER_PARAMS_H
 
+#include <stack>
+
+enum Section { S_TYPE, S_VAR, S_CODE };
+
 struct PseudoFormatterParams
 {
     int depth;
@@ -19,6 +23,8 @@ struct PseudoFormatterParams
 
     bool perform_indentation_size_check;
 
+    std::stack<Section> section;
+
     PseudoFormatterParams():
         depth(0),
         current_line_index(0),
@@ -28,7 +34,10 @@ struct PseudoFormatterParams
         indentation_end(0),
         operation_per_line_count(0),
         depth_by_fact(0),
-        perform_indentation_size_check(false) {}
+        perform_indentation_size_check(false)
+    {
+        section.push(S_CODE);
+    }
 };
 
 #endif
