@@ -1,6 +1,12 @@
+2:26: name j is not of style caps_underscore
 6:3: name caMel is not of style caps_underscore
 7:3: name Pascal is not of style caps_underscore
 8:3: name under_score is not of style caps_underscore
+13:18: name x is not of style caps_underscore
+20:5: name x is not of style caps_underscore
+20:8: name y is not of style caps_underscore
+25:5: name y is not of style caps_underscore
+27:5: name x is not of style caps_underscore
 34:3: name caMel is not of style caps_underscore
 35:3: name Pascal is not of style caps_underscore
 36:3: name under_score is not of style caps_underscore

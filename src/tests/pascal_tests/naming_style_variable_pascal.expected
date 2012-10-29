@@ -1,6 +1,12 @@
+2:26: name j is not of style pascal
 6:3: name caMel is not of style pascal
 8:3: name under_score is not of style pascal
 9:3: name CAPS_UNDERSCORE is not of style pascal
+13:18: name x is not of style pascal
+20:5: name x is not of style pascal
+20:8: name y is not of style pascal
+25:5: name y is not of style pascal
+27:5: name x is not of style pascal
 34:3: name caMel is not of style pascal
 36:3: name under_score is not of style pascal
 37:3: name CAPS_UNDERSCORE is not of style pascal

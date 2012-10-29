@@ -1,3 +1,3 @@
-23:2: name PascalClass is not of style camel
-30:2: name underscore_type is not of style camel
-31:2: name CAPS_UNDERSCORE_TYPE is not of style camel
+23:3: name PascalClass is not of style camel
+30:3: name underscore_type is not of style camel
+31:3: name CAPS_UNDERSCORE_TYPE is not of style camel
