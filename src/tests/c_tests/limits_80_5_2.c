@@ -26,9 +26,9 @@ int main ( int argc, int* argv[] )
         }
 
 
-        int c;
+    int c;
 
 
 
-        int d;
+    int d;
 }
