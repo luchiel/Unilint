@@ -15,7 +15,7 @@ begin
   else
     b := a;
     
-  if a > b then
+  if a > b then begin
     Yay;
   end else begin
     b := a;
