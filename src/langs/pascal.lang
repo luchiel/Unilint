@@ -1,11 +1,11 @@
 #added for functions and procedures
-(keyword,normal,function) =
+(keyword_declaring_func,normal,function) =
   `(\<function|procedure)([[:blank:]]+)([[:alnum:]_]+)`
 
 keyword = "alfa|and|array|case|const|div",
-      "downto|false|file|for|function|get|goto|if|in",
+      "downto|false|file|for|get|goto|if|in",
       "label|mod|new|not|or|pack|packed|page|program",
-      "put|procedure|read|readln|repeat|reset|rewrite|set",
+      "put|read|readln|repeat|reset|rewrite|set",
       "text|to|true|unpack|until|while|with|writeln|write",
       "published|public|protected|private|strict"
         nonsensitive
