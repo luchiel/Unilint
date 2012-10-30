@@ -1,5 +1,5 @@
 function camelStyle: boolean;
-function PascalStyle(var j: integ;er): boolean;
+function PascalStyle(var j: integer): boolean;
 function underscore_style: boolean;
 function CAPS_UNDERSCORE_STYLE: boolean;
 var
