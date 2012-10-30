@@ -1,4 +1,4 @@
-11:1: tabs expected, spaces found
-12:1: tabs expected, spaces found
+11:1: spaces found, tabs expected
+12:1: spaces found, tabs expected
 13:1: tabs and spaces mixed
 14:1: indent too deep

@@ -1,5 +1,5 @@
 var
-  i: integer;
+	  i: integer;
   j, k: integer;
 
 begin
