@@ -11,8 +11,8 @@ keyword = "alfa|and|array|case|const|div",
         nonsensitive
 
 keyword_declaring_varblock = "class|record" nonsensitive
-
-keyword_with_following_operation = "do|then|else|of" nonsensitive
+keyword_declaring_codeblock = "of" nonsensitive
+keyword_with_following_operation = "do|then|else" nonsensitive
 
 typeblock = "type" nonsensitive
 varblock = "var" nonsensitive

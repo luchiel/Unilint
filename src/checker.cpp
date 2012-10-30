@@ -139,6 +139,7 @@ void Checker::process_file()
     manager.addFormatter("varblock", new_formatter("varblock"));
     manager.addFormatter("keyword_declaring_varblock", new_formatter("keyword_declaring_varblock"));
     manager.addFormatter("keyword_declaring_func", new_formatter("keyword_declaring_func"));
+    manager.addFormatter("keyword_declaring_codeblock", new_formatter("keyword_declaring_codeblock"));
 
     manager.addFormatter(
         "keyword_with_following_operation", new_formatter("keyword_with_following_operation"));
