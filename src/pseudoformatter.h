@@ -29,7 +29,7 @@ private:
     void indent_error_check(int expected_depth, int scale, int start);
     void whitespace_sequence_check(const std::string& s_, int start_);
     void token_check(const std::string& s_, int start_);
-    void nesting_depth_check(int expected_depth, int start_);
+    void nesting_depth_check(int start_);
     void keyword_and_brace_check(const std::string& s_, int start_);
     void else_check(const std::string s_, int start_);
 

@@ -11,18 +11,19 @@ struct PseudoFormatterParams
     int current_line_index;
     std::string current_line;
     std::map<std::string, NameType> list_of_names;
-    //TODO: pascal vars -> indentation
     bool indented_operation_expected;
     bool indented_operation_expected_after_braces;
 
     int braces_opened;
     int indentation_end;
     int operation_per_line_count;
-
     int depth_by_fact;
+    int previous_depth;
 
     bool perform_indentation_size_check;
 
+    std::stack<int> close_on_end;
+    std::stack<int> if_depth;
     std::stack<Section> section;
 
     PseudoFormatterParams():
@@ -34,10 +35,14 @@ struct PseudoFormatterParams
         indentation_end(0),
         operation_per_line_count(0),
         depth_by_fact(0),
+        previous_depth(0),
         perform_indentation_size_check(false)
     {
+        close_on_end.push(0);
         section.push(S_CODE);
     }
+
+
 };
 
 #endif

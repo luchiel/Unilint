@@ -4,6 +4,7 @@
 
 bool PseudoFormatter::is_opening_blockbracket(const std::string& s_)
 {
+    //TODO: Begin, BEGIN etc
     return s_ == "{" || s_ == "begin";
 }
 
@@ -13,8 +14,6 @@ void PseudoFormatter::indent_error_check(int expected_depth, int scale, int star
         results.add(0, "indent too small");
     else if(formatter_params.depth_by_fact > expected_depth * scale)
         results.add(0, "indent too deep");
-
-    nesting_depth_check(expected_depth, start);
 }
 
 void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
@@ -22,6 +21,8 @@ void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
     if(is_opening_blockbracket(s_))
     {
         formatter_params.depth++;
+        formatter_params.close_on_end.push(0);
+
         ExtendedBoolean& block_at_newline(settings.ext_bool_options["start_block_at_newline"]);
         if(block_at_newline == EB_CONSISTENT)
         {
@@ -37,16 +38,26 @@ void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
         }
     }
     else
+    {
         formatter_params.depth--;
+
+        formatter_params.close_on_end.pop();
+        formatter_params.depth -= formatter_params.close_on_end.top();
+        formatter_params.close_on_end.top() = 0;
+    }
 }
 
-void PseudoFormatter::nesting_depth_check(int expected_depth, int start_)
+void PseudoFormatter::nesting_depth_check(int start_)
 {
     int maximal_nesting_depth = settings.int_options["maximal_nesting_depth"];
-    if(maximal_nesting_depth != IGNORE_OPTION && expected_depth > maximal_nesting_depth)
+    if(
+        formatter_params.depth != formatter_params.previous_depth &&
+        maximal_nesting_depth != IGNORE_OPTION &&
+        formatter_params.depth > maximal_nesting_depth)
     {
-        results.add(0, "maximal nesting depth exceeded");
+        results.add(start_, "maximal nesting depth exceeded");
     }
+    formatter_params.previous_depth = formatter_params.depth;
 }
 
 void PseudoFormatter::whitespace_sequence_check(
@@ -86,65 +97,85 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
         results.add(start_, "block brace expected: { or begin");
     }
 
-    //check indentation
-    if(
-        start_ == formatter_params.indentation_end && (
-            formatter_params.perform_indentation_size_check ||
-            start_ == 0 && settings.indentation_style != IS_IGNORE))
+    //restore last if's depth
+    if(s_ == "else")
     {
-        int indentation_size = 1;
-        if(settings.indentation_style == IS_SPACES && settings.indentation_policy == IP_BY_SIZE)
+        formatter_params.close_on_end.top() =
+            formatter_params.if_depth.top() - formatter_params.depth;
+        formatter_params.depth = formatter_params.if_depth.top();
+        formatter_params.if_depth.pop();
+    }
+
+    //calculate depth and check indentation
+    bool call_indent_error_check =
+        start_ == formatter_params.indentation_end &&
+            (formatter_params.perform_indentation_size_check ||
+            start_ == 0 && settings.indentation_style != IS_IGNORE);
+
+    //TODO: can begin be inside type?
+    bool is_inside_indented_block_without_end =
+        formatter_params.section.top() != S_CODE &&
+        element != "varblock" && element != "typeblock" &&
+        element != "keyword_declaring_func" &&
+        !(element == "blockbracket" && is_opening_blockbracket(s_));
+
+    if(is_inside_indented_block_without_end)
+        formatter_params.depth++;
+
+    int indentation_size = 1;
+    if(settings.indentation_style == IS_SPACES && settings.indentation_policy == IP_BY_SIZE)
+    {
+        indentation_size = settings.int_options["indentation_size"];
+    }
+
+    if(element == "blockbracket")
+    {
+        ExtendedBoolean& ext_extra_indent(settings.ext_bool_options["extra_indent_for_blocks"]);
+
+        if(ext_extra_indent == EB_CONSISTENT && start_ == formatter_params.indentation_end)
         {
-            indentation_size = settings.int_options["indentation_size"];
+            //TODO: pascal's main begin-end are exceptions
+            ext_extra_indent = formatter_params.depth == 0 && start_ != 0 ? EB_TRUE : EB_FALSE;
         }
 
-        //TODO: can begin be inside type?
-        bool is_inside_indented_block_without_end =
-            formatter_params.section.top() != S_CODE &&
-            element != "varblock" && element != "typeblock" &&
-            element != "keyword_declaring_func" &&
-            !(element == "blockbracket" && is_opening_blockbracket(s_));
-
-        if(is_inside_indented_block_without_end)
-            formatter_params.depth++;
-
-        if(element == "blockbracket")
+        if(is_opening_blockbracket(s_))
         {
-            ExtendedBoolean& ext_extra_indent(settings.ext_bool_options["extra_indent_for_blocks"]);
-
-            if(ext_extra_indent == EB_CONSISTENT)
-            {
-                //TODO: pascal's main begin-end are exceptions
-                ext_extra_indent = formatter_params.depth == 0 && start_ != 0 ?
-                    EB_TRUE : EB_FALSE;
-            }
-
-            if(is_opening_blockbracket(s_))
-            {
-                if(ext_extra_indent == EB_TRUE)
-                    formatter_params.depth++;
+            if(ext_extra_indent == EB_TRUE)
+                formatter_params.depth++;
+            if(call_indent_error_check)
                 indent_error_check(formatter_params.depth, indentation_size, start_);
-            }
-            else
-            {
-                indent_error_check(formatter_params.depth - 1, indentation_size, start_);
-                if(ext_extra_indent == EB_TRUE)
-                    formatter_params.depth--;
-            }
-        }
-        else if(formatter_params.indented_operation_expected)
-        {
-            //TODO: complex subexpression like in nested test
-            //depth is ++'d 'till the end of operation
-            indent_error_check(formatter_params.depth + 1, indentation_size, start_);
         }
         else
         {
-            indent_error_check(formatter_params.depth, indentation_size, start_);
+            if(call_indent_error_check)
+                indent_error_check(formatter_params.depth - 1, indentation_size, start_);
+            if(ext_extra_indent == EB_TRUE)
+                formatter_params.depth--;
         }
+    }
+    else if(formatter_params.indented_operation_expected)
+    {
+        formatter_params.depth++;
+        formatter_params.close_on_end.top()++;
+        if(call_indent_error_check)
+            indent_error_check(formatter_params.depth, indentation_size, start_);
+    }
+    else if(call_indent_error_check)
+    {
+        indent_error_check(formatter_params.depth, indentation_size, start_);
+    }
 
-        if(is_inside_indented_block_without_end)
-            formatter_params.depth--;
+    if(start_ == formatter_params.indentation_end)
+        nesting_depth_check(start_);
+
+    if(is_inside_indented_block_without_end)
+        formatter_params.depth--;
+
+    //set if_depth
+    if(s_ == "if")
+    {
+        //TODO: nonsensitive
+        formatter_params.if_depth.push(formatter_params.depth);
     }
 
     //check if expected brace is found
@@ -302,7 +333,6 @@ void PseudoFormatter::prefix_preprocessing(const std::string& s)
         //detect tab_size for IP_CONSISTENT
         if(settings.indentation_policy == IP_CONSISTENT)
         {
-            //TODO: does first indent found always have depth one? NO
             settings.int_options["indentation_size"] = s.size();
             settings.indentation_policy = IP_BY_SIZE;
         }
@@ -423,10 +453,11 @@ void PseudoFormatter::format(
         if(formatter_params.braces_opened == 0)
             formatter_params.section.top() = element == "varblock" ? S_VAR : S_TYPE;
     }
-    else if(element == "keyword_declaring_varblock")
+    else if(element == "keyword_declaring_varblock" || element == "keyword_declaring_codeblock")
     {
-        formatter_params.section.push(S_VAR);
+        formatter_params.section.push(element == "keyword_declaring_varblock" ? S_VAR : S_CODE);
         formatter_params.depth++;
+        formatter_params.close_on_end.push(0);
     }
     else if(element == "classname" || element == "function")
     {
@@ -470,10 +501,11 @@ void PseudoFormatter::format(
     }
     else if(element == "semicolon")
     {
-        //formatter_params.semicolon_count++;
-        //lang-dependent
-        //trig operation to false
-        //TODO: for(;;)
+        if(formatter_params.braces_opened == 0)
+        {
+            formatter_params.depth -= formatter_params.close_on_end.top();
+            formatter_params.close_on_end.top() = 0;
+        }
     }
     else if(element == "brace")
     {
