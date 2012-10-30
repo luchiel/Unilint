@@ -7,12 +7,14 @@ bool PseudoFormatter::is_opening_blockbracket(const std::string& s_)
     return s_ == "{" || s_ == "begin";
 }
 
-void PseudoFormatter::indent_error_check(int expected_depth)
+void PseudoFormatter::indent_error_check(int expected_depth, int scale, int start)
 {
-    if(formatter_params.depth_by_fact < expected_depth)
+    if(formatter_params.depth_by_fact < expected_depth * scale)
         results.add(0, "indent too small");
-    else if(formatter_params.depth_by_fact > expected_depth)
+    else if(formatter_params.depth_by_fact > expected_depth * scale)
         results.add(0, "indent too deep");
+
+    nesting_depth_check(expected_depth, start);
 }
 
 void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
@@ -36,14 +38,12 @@ void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
     }
     else
         formatter_params.depth--;
-
-    nesting_depth_check(start_);
 }
 
-void PseudoFormatter::nesting_depth_check(int start_)
+void PseudoFormatter::nesting_depth_check(int expected_depth, int start_)
 {
     int maximal_nesting_depth = settings.int_options["maximal_nesting_depth"];
-    if(maximal_nesting_depth != IGNORE_OPTION && formatter_params.depth > maximal_nesting_depth)
+    if(maximal_nesting_depth != IGNORE_OPTION && expected_depth > maximal_nesting_depth)
     {
         results.add(0, "maximal nesting depth exceeded");
     }
@@ -98,6 +98,16 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
             indentation_size = settings.int_options["indentation_size"];
         }
 
+        //TODO: can begin be inside type?
+        bool is_inside_indented_block_without_end =
+            formatter_params.section.top() != S_CODE &&
+            element != "varblock" && element != "typeblock" &&
+            element != "keyword_declaring_func" &&
+            !(element == "blockbracket" && is_opening_blockbracket(s_));
+
+        if(is_inside_indented_block_without_end)
+            formatter_params.depth++;
+
         if(element == "blockbracket")
         {
             ExtendedBoolean& ext_extra_indent(settings.ext_bool_options["extra_indent_for_blocks"]);
@@ -113,11 +123,11 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
             {
                 if(ext_extra_indent == EB_TRUE)
                     formatter_params.depth++;
-                indent_error_check(formatter_params.depth * indentation_size);
+                indent_error_check(formatter_params.depth, indentation_size, start_);
             }
             else
             {
-                indent_error_check((formatter_params.depth - 1) * indentation_size);
+                indent_error_check(formatter_params.depth - 1, indentation_size, start_);
                 if(ext_extra_indent == EB_TRUE)
                     formatter_params.depth--;
             }
@@ -126,12 +136,15 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
         {
             //TODO: complex subexpression like in nested test
             //depth is ++'d 'till the end of operation
-            indent_error_check((formatter_params.depth + 1) * indentation_size);
+            indent_error_check(formatter_params.depth + 1, indentation_size, start_);
         }
         else
         {
-            indent_error_check(formatter_params.depth * indentation_size);
+            indent_error_check(formatter_params.depth, indentation_size, start_);
         }
+
+        if(is_inside_indented_block_without_end)
+            formatter_params.depth--;
     }
 
     //check if expected brace is found
@@ -218,10 +231,12 @@ void PseudoFormatter::brace_check(const std::string& s_, int start_)
     if(s_ == "(")
     {
         formatter_params.braces_opened++;
+        formatter_params.depth++;
     }
     else
     {
         formatter_params.braces_opened--;
+        formatter_params.depth--;
         if(formatter_params.braces_opened < 0)
         {
             results.add(start_, "unexpected " + s_);
@@ -403,18 +418,15 @@ void PseudoFormatter::format(
         if(s == "{" || s == "}")
             unibracket_check(s[0], params->start);
     }
-    else if(element == "varblock")
+    else if(element == "varblock" || element == "typeblock")
     {
-        formatter_params.section.top() = S_VAR;
-        //TODO: var in function params
-    }
-    else if(element == "typeblock")
-    {
-        formatter_params.section.top() = S_TYPE;
+        if(formatter_params.braces_opened == 0)
+            formatter_params.section.top() = element == "varblock" ? S_VAR : S_TYPE;
     }
     else if(element == "keyword_declaring_varblock")
     {
         formatter_params.section.push(S_VAR);
+        formatter_params.depth++;
     }
     else if(element == "classname" || element == "function")
     {
