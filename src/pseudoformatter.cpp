@@ -264,6 +264,9 @@ void PseudoFormatter::brace_check(const std::string& s, int start)
         {
             formatter_params.indented_operation_expected_after_braces = false;
             formatter_params.indented_operation_expected = true;
+
+            if(settings.ext_bool_options["forbid_multiple_expressions_per_line"] == EB_TRUE)
+                formatter_params.line_closed = true;
         }
     }
 }
@@ -467,6 +470,9 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
     else if(element == "keyword_with_following_operation")
     {
         formatter_params.indented_operation_expected = true;
+        if(settings.ext_bool_options["forbid_multiple_expressions_per_line"] == EB_TRUE)
+            formatter_params.line_closed = true;
+
         if(s == "else")
             else_check(s, params->start);
     }
