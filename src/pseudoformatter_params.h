@@ -1,12 +1,20 @@
 #ifndef PSEUDOFORMATTER_PARAMS_H
 #define PSEUDOFORMATTER_PARAMS_H
 
+#include <map>
 #include <stack>
+#include <string>
+#include "settings.h"
 
 enum Section { S_TYPE, S_VAR, S_CODE };
 
 struct PseudoFormatterParams
 {
+private:
+    std::stack<int> open_if_count_before_blockbracket;
+    std::stack<int> close_on_end;
+
+public:
     int depth;
     int current_line_index;
     std::string current_line;
@@ -22,7 +30,6 @@ struct PseudoFormatterParams
 
     bool perform_indentation_size_check;
 
-    std::stack<int> close_on_end;
     std::stack<int> if_depth;
     std::stack<Section> section;
 
@@ -42,7 +49,11 @@ struct PseudoFormatterParams
         section.push(S_CODE);
     }
 
-
+    void restore_last_if_depth();
+    void close_blockbracket();
+    void open_blockbracket();
+    void open_statement();
+    void close_opened_statements();
 };
 
 #endif

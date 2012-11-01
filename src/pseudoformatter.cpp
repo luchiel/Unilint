@@ -20,8 +20,7 @@ void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
 {
     if(is_opening_blockbracket(s_))
     {
-        formatter_params.depth++;
-        formatter_params.close_on_end.push(0);
+        formatter_params.open_blockbracket();
 
         ExtendedBoolean& block_at_newline(settings.ext_bool_options["start_block_at_newline"]);
         if(block_at_newline == EB_CONSISTENT)
@@ -39,11 +38,7 @@ void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
     }
     else
     {
-        formatter_params.depth--;
-
-        formatter_params.close_on_end.pop();
-        formatter_params.depth -= formatter_params.close_on_end.top();
-        formatter_params.close_on_end.top() = 0;
+        formatter_params.close_blockbracket();
     }
 }
 
@@ -97,14 +92,8 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
         results.add(start_, "block brace expected: { or begin");
     }
 
-    //restore last if's depth
     if(s_ == "else")
-    {
-        formatter_params.close_on_end.top() =
-            formatter_params.if_depth.top() - formatter_params.depth;
-        formatter_params.depth = formatter_params.if_depth.top();
-        formatter_params.if_depth.pop();
-    }
+        formatter_params.restore_last_if_depth();
 
     //calculate depth and check indentation
     bool call_indent_error_check =
@@ -155,8 +144,7 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
     }
     else if(formatter_params.indented_operation_expected)
     {
-        formatter_params.depth++;
-        formatter_params.close_on_end.top()++;
+        formatter_params.open_statement();
         if(call_indent_error_check)
             indent_error_check(formatter_params.depth, indentation_size, start_);
     }
@@ -456,8 +444,7 @@ void PseudoFormatter::format(
     else if(element == "keyword_declaring_varblock" || element == "keyword_declaring_codeblock")
     {
         formatter_params.section.push(element == "keyword_declaring_varblock" ? S_VAR : S_CODE);
-        formatter_params.depth++;
-        formatter_params.close_on_end.push(0);
+        formatter_params.open_blockbracket();
     }
     else if(element == "classname" || element == "function")
     {
@@ -502,10 +489,7 @@ void PseudoFormatter::format(
     else if(element == "semicolon")
     {
         if(formatter_params.braces_opened == 0)
-        {
-            formatter_params.depth -= formatter_params.close_on_end.top();
-            formatter_params.close_on_end.top() = 0;
-        }
+            formatter_params.close_opened_statements();
     }
     else if(element == "brace")
     {
