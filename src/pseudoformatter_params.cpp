@@ -44,3 +44,12 @@ void PseudoFormatterParams::close_opened_statements()
     depth -= close_on_end.top();
     close_on_end.top() = 0;
 }
+
+void PseudoFormatterParams::init_new_line()
+{
+    line_closed = false;
+    depth_by_fact = 0;
+    indentation_end = 0;
+    operation_per_line_count = 0;
+    perform_indentation_size_check = false;
+}

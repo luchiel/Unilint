@@ -29,6 +29,8 @@ string delim "'" "'"  escape "\\"
 
 type = "boolean|byte|char|integer|maxint|real|string" nonsensitive
 
+semicolon = ";"
+
 brace = "(|)"
 bracket = "[|]"
 

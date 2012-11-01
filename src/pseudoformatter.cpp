@@ -78,6 +78,13 @@ void PseudoFormatter::whitespace_sequence_check(const std::string& s, int start)
 
 void PseudoFormatter::token_check(const std::string& s, int start)
 {
+    //check multiple expressions per line
+    if(element != "comment" && formatter_params.line_closed)
+    {
+        results.add(start, "two or more expressions at one line");
+        formatter_params.line_closed = false;
+    }
+
     //check if compulsory block brackets are present
     if(
         formatter_params.indented_operation_expected &&
@@ -475,7 +482,11 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
     else if(element == "semicolon")
     {
         if(formatter_params.braces_opened == 0)
+        {
             formatter_params.close_opened_statements();
+            if(settings.ext_bool_options["forbid_multiple_expressions_per_line"] == EB_TRUE)
+                formatter_params.line_closed = true;
+        }
     }
     else if(element == "brace")
     {

@@ -168,10 +168,7 @@ void Checker::process_file()
         if(formatter_params.current_line.size() != 0)
         {
             params.start = 0;
-            formatter_params.depth_by_fact = 0;
-            formatter_params.indentation_end = 0;
-            formatter_params.operation_per_line_count = 0;
-            formatter_params.perform_indentation_size_check = false;
+            formatter_params.init_new_line();
             highlighter.highlightParagraph(formatter_params.current_line);
         };
     }

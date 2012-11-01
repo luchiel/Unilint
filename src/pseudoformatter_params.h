@@ -20,6 +20,7 @@ public:
     int current_line_index;
     std::string current_line;
     std::map<std::string, NameType> list_of_names;
+    bool line_closed;
     bool indented_operation_expected;
     bool indented_operation_expected_after_braces;
 
@@ -36,6 +37,7 @@ public:
     PseudoFormatterParams():
         depth(0),
         current_line_index(0),
+        line_closed(false),
         indented_operation_expected(false),
         indented_operation_expected_after_braces(false),
         braces_opened(0),
@@ -55,6 +57,8 @@ public:
     void restore_last_if_depth();
     void open_statement();
     void close_opened_statements();
+
+    void init_new_line();
 };
 
 #endif
