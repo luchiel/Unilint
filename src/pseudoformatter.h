@@ -21,19 +21,18 @@ private:
     std::string element;
 
     void prefix_preprocessing(const std::string& s);
-    void brace_check(const std::string& s_, int start_);
-    void unibracket_check(char c_, int start_);
-    void spaces_in_unibrackets_check(char c_, int start_, int offset_);
-    void blockbracket_check(const std::string& s_, int start_);
-    void name_style_check(const std::string& s_, int start_, const std::string& type_);
+    void brace_check(const std::string& s, int start);
+    void unibracket_check(char c, int start);
+    void spaces_in_unibrackets_check(char c, int start, int offset);
+    void blockbracket_check(const std::string& s, int start);
+    void name_style_check(const std::string& s, int start, const std::string& type);
     void indent_error_check(int expected_depth, int scale, int start);
-    void whitespace_sequence_check(const std::string& s_, int start_);
-    void token_check(const std::string& s_, int start_);
-    void nesting_depth_check(int start_);
-    void keyword_and_brace_check(const std::string& s_, int start_);
-    void else_check(const std::string s_, int start_);
-
-    bool is_opening_blockbracket(const std::string& s_);
+    void whitespace_sequence_check(const std::string& s, int start);
+    void token_check(const std::string& s, int start);
+    void nesting_depth_check(int start);
+    void keyword_and_brace_check(const std::string& s, int start);
+    void else_check(const std::string s, int start);
+    bool is_opening_blockbracket(const std::string& s);
 
 public:
     //ToDo: inheritance tree, so no ifs in format()

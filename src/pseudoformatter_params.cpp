@@ -21,6 +21,11 @@ void PseudoFormatterParams::close_blockbracket()
     close_on_end.top() = 0;
 }
 
+void PseudoFormatterParams::save_if_depth()
+{
+    if_depth.push(depth);
+}
+
 void PseudoFormatterParams::restore_last_if_depth()
 {
     close_on_end.top() = if_depth.top() - depth;

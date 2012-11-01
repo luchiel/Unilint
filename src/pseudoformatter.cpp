@@ -2,10 +2,10 @@
 #include "pseudoformatter.h"
 #include "exception.h"
 
-bool PseudoFormatter::is_opening_blockbracket(const std::string& s_)
+bool PseudoFormatter::is_opening_blockbracket(const std::string& s)
 {
     //TODO: Begin, BEGIN etc
-    return s_ == "{" || s_ == "begin";
+    return s == "{" || s == "begin";
 }
 
 void PseudoFormatter::indent_error_check(int expected_depth, int scale, int start)
@@ -16,24 +16,24 @@ void PseudoFormatter::indent_error_check(int expected_depth, int scale, int star
         results.add(0, "indent too deep");
 }
 
-void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
+void PseudoFormatter::blockbracket_check(const std::string& s, int start)
 {
-    if(is_opening_blockbracket(s_))
+    if(is_opening_blockbracket(s))
     {
         formatter_params.open_blockbracket();
 
         ExtendedBoolean& block_at_newline(settings.ext_bool_options["start_block_at_newline"]);
         if(block_at_newline == EB_CONSISTENT)
         {
-            block_at_newline = start_ == formatter_params.indentation_end ? EB_TRUE : EB_FALSE;
+            block_at_newline = start == formatter_params.indentation_end ? EB_TRUE : EB_FALSE;
         }
-        else if(block_at_newline == EB_TRUE && start_ != formatter_params.indentation_end)
+        else if(block_at_newline == EB_TRUE && start != formatter_params.indentation_end)
         {
-            results.add(start_, s_ + " is not at new line");
+            results.add(start, s + " is not at new line");
         }
-        else if(block_at_newline == EB_FALSE && start_ == formatter_params.indentation_end)
+        else if(block_at_newline == EB_FALSE && start == formatter_params.indentation_end)
         {
-            results.add(start_, s_ + " is at new line");
+            results.add(start, s + " is at new line");
         }
     }
     else
@@ -42,7 +42,7 @@ void PseudoFormatter::blockbracket_check(const std::string& s_, int start_)
     }
 }
 
-void PseudoFormatter::nesting_depth_check(int start_)
+void PseudoFormatter::nesting_depth_check(int start)
 {
     int maximal_nesting_depth = settings.int_options["maximal_nesting_depth"];
     if(
@@ -50,38 +50,33 @@ void PseudoFormatter::nesting_depth_check(int start_)
         maximal_nesting_depth != IGNORE_OPTION &&
         formatter_params.depth > maximal_nesting_depth)
     {
-        results.add(start_, "maximal nesting depth exceeded");
+        results.add(start, "maximal nesting depth exceeded");
     }
     formatter_params.previous_depth = formatter_params.depth;
 }
 
-void PseudoFormatter::whitespace_sequence_check(
-    const std::string& s_, int start_)
+void PseudoFormatter::whitespace_sequence_check(const std::string& s, int start)
 {
-    if(start_ + s_.size() == formatter_params.current_line.size())
+    if(start + s.size() == formatter_params.current_line.size())
     {
-        ExtendedBoolean trailing = settings.ext_bool_options["forbid_trailing_whitespaces"];
-        if(trailing != EB_IGNORE)
-            results.add(start_, "trailing whitespaces");
+        if(settings.ext_bool_options["forbid_trailing_whitespaces"] != EB_IGNORE)
+            results.add(start, "trailing whitespaces");
     }
-    else if(start_ == 0)
+    else if(start == 0)
     {
-        formatter_params.indentation_end = s_.size();
+        formatter_params.indentation_end = s.size();
 
         if(settings.indentation_style != IS_IGNORE)
-            prefix_preprocessing(s_);
+            prefix_preprocessing(s);
     }
     else
     {
-        ExtendedBoolean vertical = settings.ext_bool_options["forbid_vertical_alignment"];
-        if(vertical != EB_IGNORE && s_.size() > 1)
-            results.add(start_, "more than one whitespace");
-        if(s_[0] != ' ')
-            results.add(start_, "unexpected non-space whitespace character");
+        if(s.size() > 1 && settings.ext_bool_options["forbid_vertical_alignment"] != EB_IGNORE)
+            results.add(start, "more than one whitespace");
     }
 }
 
-void PseudoFormatter::token_check(const std::string& s_, int start_)
+void PseudoFormatter::token_check(const std::string& s, int start)
 {
     //check if compulsory block brackets are present
     if(
@@ -89,24 +84,24 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
         settings.ext_bool_options["compulsory_block_braces"] == EB_TRUE &&
         element != "blockbracket")
     {
-        results.add(start_, "block brace expected: { or begin");
+        results.add(start, "block brace expected: { or begin");
     }
 
-    if(s_ == "else")
+    if(s == "else")
         formatter_params.restore_last_if_depth();
 
     //calculate depth and check indentation
     bool call_indent_error_check =
-        start_ == formatter_params.indentation_end &&
+        start == formatter_params.indentation_end &&
             (formatter_params.perform_indentation_size_check ||
-            start_ == 0 && settings.indentation_style != IS_IGNORE);
+            start == 0 && settings.indentation_style != IS_IGNORE);
 
     //TODO: can begin be inside type?
     bool is_inside_indented_block_without_end =
         formatter_params.section.top() != S_CODE &&
         element != "varblock" && element != "typeblock" &&
         element != "keyword_declaring_func" &&
-        !(element == "blockbracket" && is_opening_blockbracket(s_));
+        !(element == "blockbracket" && is_opening_blockbracket(s));
 
     if(is_inside_indented_block_without_end)
         formatter_params.depth++;
@@ -121,49 +116,46 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
     {
         ExtendedBoolean& ext_extra_indent(settings.ext_bool_options["extra_indent_for_blocks"]);
 
-        if(ext_extra_indent == EB_CONSISTENT && start_ == formatter_params.indentation_end)
+        if(ext_extra_indent == EB_CONSISTENT && start == formatter_params.indentation_end)
         {
             //TODO: pascal's main begin-end are exceptions
-            ext_extra_indent = formatter_params.depth == 0 && start_ != 0 ? EB_TRUE : EB_FALSE;
+            ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
         }
 
-        if(is_opening_blockbracket(s_))
+        if(is_opening_blockbracket(s))
         {
             if(ext_extra_indent == EB_TRUE)
                 formatter_params.depth++;
             if(call_indent_error_check)
-                indent_error_check(formatter_params.depth, indentation_size, start_);
+                indent_error_check(formatter_params.depth, indentation_size, start);
         }
         else
         {
             if(call_indent_error_check)
-                indent_error_check(formatter_params.depth - 1, indentation_size, start_);
+                indent_error_check(formatter_params.depth - 1, indentation_size, start);
             if(ext_extra_indent == EB_TRUE)
                 formatter_params.depth--;
         }
     }
-    else if(formatter_params.indented_operation_expected)
+    else
     {
-        formatter_params.open_statement();
+        if(formatter_params.indented_operation_expected)
+            formatter_params.open_statement();
+
         if(call_indent_error_check)
-            indent_error_check(formatter_params.depth, indentation_size, start_);
-    }
-    else if(call_indent_error_check)
-    {
-        indent_error_check(formatter_params.depth, indentation_size, start_);
+            indent_error_check(formatter_params.depth, indentation_size, start);
     }
 
-    if(start_ == formatter_params.indentation_end)
-        nesting_depth_check(start_);
+    if(start == formatter_params.indentation_end)
+        nesting_depth_check(start);
 
     if(is_inside_indented_block_without_end)
         formatter_params.depth--;
 
-    //set if_depth
-    if(s_ == "if")
+    if(s == "if")
     {
         //TODO: nonsensitive
-        formatter_params.if_depth.push(formatter_params.depth);
+        formatter_params.save_if_depth();
     }
 
     //check if expected brace is found
@@ -172,7 +164,7 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
         formatter_params.braces_opened == 0 &&
         element != "brace")
     {
-        results.add(start_, "brace expected");
+        results.add(start, "brace expected");
         formatter_params.indented_operation_expected_after_braces = false;
     }
 
@@ -180,28 +172,27 @@ void PseudoFormatter::token_check(const std::string& s_, int start_)
     formatter_params.indented_operation_expected = false;
 }
 
-void PseudoFormatter::spaces_in_unibrackets_check(
-    char c_, int start_, int offset_)
+void PseudoFormatter::spaces_in_unibrackets_check(char c, int start, int offset)
 {
     ExtendedBoolean* opt_ptr = NULL;
     char opposite;
 
-    switch(c_)
+    switch(c)
     {
         case '(':
         case ')':
             opt_ptr = &settings.ext_bool_options["spaces_inside_braces"];
-            opposite = c_ == '(' ? ')' : '(';
+            opposite = c == '(' ? ')' : '(';
             break;
         case '[':
         case ']':
             opt_ptr = &settings.ext_bool_options["spaces_inside_brackets"];
-            opposite = c_ == '[' ? ']' : '[';
+            opposite = c == '[' ? ']' : '[';
             break;
         case '{':
         case '}':
             opt_ptr = &settings.ext_bool_options["spaces_inside_curly_braces"];
-            opposite = c_ == '{' ? '}' : '{';
+            opposite = c == '{' ? '}' : '{';
             break;
         default:
             throw UnilintException("Not a bracket symbol");
@@ -210,44 +201,44 @@ void PseudoFormatter::spaces_in_unibrackets_check(
     ExtendedBoolean& spaces_inside(*opt_ptr);
 
     //empty brackets are exception
-    if(formatter_params.current_line[start_ + offset_] == opposite)
+    if(formatter_params.current_line[start + offset] == opposite)
         return;
 
     if(spaces_inside == EB_CONSISTENT)
     {
-        spaces_inside = formatter_params.current_line[start_ + offset_] == ' ' ? EB_TRUE : EB_FALSE;
+        spaces_inside = formatter_params.current_line[start + offset] == ' ' ? EB_TRUE : EB_FALSE;
     }
-    else if(spaces_inside == EB_TRUE && formatter_params.current_line[start_ + offset_] != ' ')
+    else if(spaces_inside == EB_TRUE && formatter_params.current_line[start + offset] != ' ')
     {
         results.add(
-            start_ + offset_,
-            std::string("no space ") + (offset_ > 0 ? "after " : "before ") + c_);
+            start + offset,
+            std::string("no space ") + (offset > 0 ? "after " : "before ") + c);
     }
-    else if(spaces_inside == EB_FALSE && formatter_params.current_line[start_ + offset_] == ' ')
+    else if(spaces_inside == EB_FALSE && formatter_params.current_line[start + offset] == ' ')
     {
         results.add(
-            start_ + offset_,
-            std::string("unexpected space ") + (offset_ > 0 ? "after " : "before ") + c_);
+            start + offset,
+            std::string("unexpected space ") + (offset > 0 ? "after " : "before ") + c);
     }
 }
 
-void PseudoFormatter::unibracket_check(char c_, int start_)
+void PseudoFormatter::unibracket_check(char c, int start)
 {
-    if(c_ == '(' || c_ == '[' || c_ == '{')
+    if(c == '(' || c == '[' || c == '{')
     {
-        if(start_ != formatter_params.current_line.size() - 1)
-            spaces_in_unibrackets_check(c_, start_, 1);
+        if(start != formatter_params.current_line.size() - 1)
+            spaces_in_unibrackets_check(c, start, 1);
     }
     else
     {
-        if(start_ != 0 && start_ != formatter_params.indentation_end)
-            spaces_in_unibrackets_check(c_, start_, -1);
+        if(start != 0 && start != formatter_params.indentation_end)
+            spaces_in_unibrackets_check(c, start, -1);
     }
 }
 
-void PseudoFormatter::brace_check(const std::string& s_, int start_)
+void PseudoFormatter::brace_check(const std::string& s, int start)
 {
-    if(s_ == "(")
+    if(s == "(")
     {
         formatter_params.braces_opened++;
         formatter_params.depth++;
@@ -258,7 +249,7 @@ void PseudoFormatter::brace_check(const std::string& s_, int start_)
         formatter_params.depth--;
         if(formatter_params.braces_opened < 0)
         {
-            results.add(start_, "unexpected " + s_);
+            results.add(start, "unexpected " + s);
         }
         else if(
             formatter_params.braces_opened == 0 &&
@@ -294,15 +285,12 @@ void PseudoFormatter::prefix_preprocessing(const std::string& s)
     if(settings.indentation_style == IS_CONSISTENT)
         settings.indentation_style = tabs ? IS_TABS : IS_SPACES;
 
-    if(tabs)
+    if(tabs && settings.indentation_style == IS_SPACES)
     {
-        if(settings.indentation_style == IS_SPACES)
-        {
-            results.add(0, "tabs found, spaces expected");
-            //indentation_size can be undefined
-            //so tabs cannot be translated to spaces
-            return;
-        }
+        results.add(0, "tabs found, spaces expected");
+        //indentation_size can be undefined
+        //so tabs cannot be translated to spaces
+        return;
     }
 
     if(spaces)
@@ -330,31 +318,30 @@ void PseudoFormatter::prefix_preprocessing(const std::string& s)
     formatter_params.perform_indentation_size_check = true;
 }
 
-void PseudoFormatter::name_style_check(
-    const std::string& s_, int start_, const std::string& type_)
+void PseudoFormatter::name_style_check(const std::string& s, int start, const std::string& type)
 {
-    NamingStyle ns = settings.naming_styles[type_];
+    NamingStyle ns = settings.naming_styles[type];
     bool style_error = false;
     if(ns == NS_CAMEL || ns == NS_PASCAL)
     {
         style_error =
-            ns == NS_CAMEL && !std::islower(s_[0]) ||
-            ns == NS_PASCAL && !std::isupper(s_[0]);
+            ns == NS_CAMEL && !std::islower(s[0]) ||
+            ns == NS_PASCAL && !std::isupper(s[0]);
 
-        for(int i = 1; !style_error && i < s_.size(); ++i)
+        for(int i = 1; !style_error && i < s.size(); ++i)
         {
-            style_error = !std::isalpha(s_[i]) && !std::isdigit(s_[i]);
+            style_error = !std::isalpha(s[i]) && !std::isdigit(s[i]);
         }
     }
     if(ns == NS_UNDERSCORE || ns == NS_CAPS_UNDERSCORE)
     {
-        for(int i = 0; !style_error && i < s_.size(); ++i)
+        for(int i = 0; !style_error && i < s.size(); ++i)
         {
             style_error =
-                s_[i] != '_' &&
-                !std::isdigit(s_[i]) && (
-                    ns == NS_UNDERSCORE && !islower(s_[i]) ||
-                    ns == NS_CAPS_UNDERSCORE && !isupper(s_[i]));
+                s[i] != '_' &&
+                !std::isdigit(s[i]) && (
+                    ns == NS_UNDERSCORE && !islower(s[i]) ||
+                    ns == NS_CAPS_UNDERSCORE && !isupper(s[i]));
         }
     }
     if(style_error)
@@ -364,15 +351,15 @@ void PseudoFormatter::name_style_check(
             ns == NS_PASCAL ? "pascal" :
             ns == NS_UNDERSCORE ? "underscore" :
                 "caps_underscore");
-        results.add(start_, "name " + s_ + " is not of style " + ns_string);
+        results.add(start, "name " + s + " is not of style " + ns_string);
     }
 }
 
-void PseudoFormatter::keyword_and_brace_check(const std::string& s_, int start_)
+void PseudoFormatter::keyword_and_brace_check(const std::string& s, int start)
 {
     ExtendedBoolean& space(settings.ext_bool_options["space_between_keyword_and_brace"]);
 
-    int keyword_end = start_ + s_.size();
+    int keyword_end = start + s.size();
     if(keyword_end == formatter_params.current_line.size())
         return;
 
@@ -382,35 +369,33 @@ void PseudoFormatter::keyword_and_brace_check(const std::string& s_, int start_)
     }
     else if(space == EB_TRUE && formatter_params.current_line[keyword_end] != ' ')
     {
-        results.add(keyword_end, "no space after " + s_);
+        results.add(keyword_end, "no space after " + s);
     }
     else if(space == EB_FALSE && formatter_params.current_line[keyword_end] == ' ')
     {
-        results.add(keyword_end, "space after " + s_);
+        results.add(keyword_end, "space after " + s);
     }
 }
 
-void PseudoFormatter::else_check(const std::string s_, int start_)
+void PseudoFormatter::else_check(const std::string s, int start)
 {
     ExtendedBoolean& at_newline(settings.ext_bool_options["else_at_newline"]);
     if(at_newline == EB_CONSISTENT)
     {
-        at_newline = start_ == formatter_params.indentation_end ?
-            EB_TRUE : EB_FALSE;
+        at_newline = start == formatter_params.indentation_end ? EB_TRUE : EB_FALSE;
     }
-    else if(at_newline == EB_TRUE && start_ != formatter_params.indentation_end)
+    else if(at_newline == EB_TRUE && start != formatter_params.indentation_end)
     {
-        results.add(start_, "else is not at new line");
+        results.add(start, "else is not at new line");
     }
-    else if(at_newline == EB_FALSE && start_ == formatter_params.indentation_end)
+    else if(at_newline == EB_FALSE && start == formatter_params.indentation_end)
     {
         //TODO: previous was not brace => oops
-        results.add(start_, "else is at new line");
+        results.add(start, "else is at new line");
     }
 }
 
-void PseudoFormatter::format(
-    const std::string& s, const srchilite::FormatterParams* params)
+void PseudoFormatter::format(const std::string& s, const srchilite::FormatterParams* params)
 {
     if(params == NULL)
         throw UnilintException("Something strange happened");
@@ -454,6 +439,7 @@ void PseudoFormatter::format(
         //look at other langs and repair them
         if(name_in_list == formatter_params.list_of_names.end() || name_in_list->second != name_type)
         {
+            //TODO: map is not multimap. Find out more about func&class namespaces
             formatter_params.list_of_names[s] = name_type;
             name_style_check(s, params->start, (
                 name_type == NT_CLASS ? "class_naming_style" : "function_naming_style"));
