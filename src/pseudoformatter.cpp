@@ -78,8 +78,18 @@ void PseudoFormatter::whitespace_sequence_check(const std::string& s, int start)
 
 void PseudoFormatter::token_check(const std::string& s, int start)
 {
+    if(s == "else")
+    {
+        formatter_params.close_opened_statements();
+        //TODO: if not blockbracket
+        //if(settings.ext_bool_options["forbid_multiple_expressions_per_line"] == EB_TRUE)
+        //    formatter_params.line_closed = true;
+
+        formatter_params.restore_last_if_depth();
+    }
+
     //check multiple expressions per line
-    if(element != "comment" && formatter_params.line_closed)
+    if(formatter_params.line_closed && element != "comment" && element != "blockbracket")
     {
         results.add(start, "two or more expressions at one line");
         formatter_params.line_closed = false;
@@ -93,9 +103,6 @@ void PseudoFormatter::token_check(const std::string& s, int start)
     {
         results.add(start, "block brace expected: { or begin");
     }
-
-    if(s == "else")
-        formatter_params.restore_last_if_depth();
 
     //calculate depth and check indentation
     bool call_indent_error_check =
