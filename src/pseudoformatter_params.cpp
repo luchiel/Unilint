@@ -17,8 +17,7 @@ void PseudoFormatterParams::close_blockbracket()
         if_depth.pop();
     open_if_count_before_blockbracket.pop();
 
-    depth -= close_on_end.top();
-    close_on_end.top() = 0;
+    close_opened_statements();
 }
 
 void PseudoFormatterParams::save_if_depth()
