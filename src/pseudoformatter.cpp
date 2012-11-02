@@ -118,28 +118,35 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         element != "keyword_declaring_func" &&
         !(element == "blockbracket" && is_opening_blockbracket(s));
 
+    bool bound_to_title = formatter_params.depth != 0 || formatter_params.try_bind_to_title();
+    ExtendedBoolean& ext_extra_indent(settings.ext_bool_options["extra_indent_for_blocks"]);
+
     if(is_inside_indented_block_without_end)
+    {
         formatter_params.depth++;
+
+        if(bound_to_title)
+        {
+            if(ext_extra_indent == EB_CONSISTENT && start == formatter_params.indentation_end)
+                ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
+
+            if(ext_extra_indent == EB_TRUE)
+                formatter_params.depth++;
+        }
+    }
 
     int indentation_size = 1;
     if(settings.indentation_style == IS_SPACES && settings.indentation_policy == IP_BY_SIZE)
-    {
         indentation_size = settings.int_options["indentation_size"];
-    }
 
     if(element == "blockbracket")
     {
-        ExtendedBoolean& ext_extra_indent(settings.ext_bool_options["extra_indent_for_blocks"]);
-
-        if(ext_extra_indent == EB_CONSISTENT && start == formatter_params.indentation_end)
-        {
-            //TODO: pascal's main begin-end are exceptions
+        if(ext_extra_indent == EB_CONSISTENT && start == formatter_params.indentation_end && bound_to_title)
             ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
-        }
 
         if(is_opening_blockbracket(s))
         {
-            if(ext_extra_indent == EB_TRUE)
+            if(ext_extra_indent == EB_TRUE && bound_to_title)
                 formatter_params.depth++;
             if(call_indent_error_check)
                 indent_error_check(formatter_params.depth, indentation_size, start);
@@ -148,8 +155,12 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         {
             if(call_indent_error_check)
                 indent_error_check(formatter_params.depth - 1, indentation_size, start);
-            if(ext_extra_indent == EB_TRUE)
+            if(ext_extra_indent == EB_TRUE && bound_to_title)
+            {
                 formatter_params.depth--;
+                if(formatter_params.depth == 1)
+                    formatter_params.close_title();
+            }
         }
     }
     else
@@ -165,7 +176,12 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         nesting_depth_check(start);
 
     if(is_inside_indented_block_without_end)
+    {
         formatter_params.depth--;
+
+        if(bound_to_title && ext_extra_indent == EB_TRUE)
+            formatter_params.depth--;
+    }
 
     if(s == "if")
     {
@@ -443,6 +459,11 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
     {
         if(formatter_params.braces_opened == 0)
             formatter_params.section.top() = element == "varblock" ? S_VAR : S_TYPE;
+    }
+    else if(element == "keyword_declaring_func")
+    {
+        if(formatter_params.depth == 0)
+            formatter_params.create_title();
     }
     else if(element == "keyword_declaring_varblock" || element == "keyword_declaring_codeblock")
     {
