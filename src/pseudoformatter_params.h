@@ -13,7 +13,7 @@ struct PseudoFormatterParams
 private:
     std::stack<int> open_if_count_before_blockbracket;
     std::stack<int> close_on_end;
-    std::stack<int> if_depth;
+    std::stack< std::pair<int, bool> > if_depth;
 
 public:
     int depth;
@@ -31,6 +31,7 @@ public:
     int previous_depth;
 
     bool perform_indentation_size_check;
+    bool if_had_blockbracket;
 
     std::stack<Section> section;
 
@@ -45,7 +46,8 @@ public:
         operation_per_line_count(0),
         depth_by_fact(0),
         previous_depth(0),
-        perform_indentation_size_check(false)
+        perform_indentation_size_check(false),
+        if_had_blockbracket(false)
     {
         close_on_end.push(0);
         section.push(S_CODE);

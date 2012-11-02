@@ -81,9 +81,11 @@ void PseudoFormatter::token_check(const std::string& s, int start)
     if(s == "else")
     {
         formatter_params.close_opened_statements();
-        //TODO: if not blockbracket
-        //if(settings.ext_bool_options["forbid_multiple_expressions_per_line"] == EB_TRUE)
-        //    formatter_params.line_closed = true;
+
+        if(settings.ext_bool_options["forbid_multiple_expressions_per_line"] == EB_TRUE)
+            formatter_params.line_closed =
+                start != formatter_params.indentation_end && !formatter_params.if_had_blockbracket;
+        formatter_params.if_had_blockbracket = false;
 
         formatter_params.restore_last_if_depth();
     }

@@ -2,6 +2,9 @@
 
 void PseudoFormatterParams::open_blockbracket()
 {
+    if(if_depth.size() != 0 && depth == if_depth.top().first)
+        if_depth.top().second = true;
+
     depth++;
 
     close_on_end.push(0);
@@ -22,13 +25,14 @@ void PseudoFormatterParams::close_blockbracket()
 
 void PseudoFormatterParams::save_if_depth()
 {
-    if_depth.push(depth);
+    if_depth.push(std::make_pair(depth, false));
 }
 
 void PseudoFormatterParams::restore_last_if_depth()
 {
-    close_on_end.top() = if_depth.top() - depth;
-    depth = if_depth.top();
+    close_on_end.top() = if_depth.top().first - depth;
+    depth = if_depth.top().first;
+    if_had_blockbracket = if_depth.top().second;
     if_depth.pop();
 }
 
