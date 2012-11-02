@@ -85,7 +85,6 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         if(settings.ext_bool_options["forbid_multiple_expressions_per_line"] == EB_TRUE)
             formatter_params.line_closed =
                 start != formatter_params.indentation_end && !formatter_params.if_had_blockbracket;
-        formatter_params.if_had_blockbracket = false;
 
         formatter_params.restore_last_if_depth();
     }
@@ -409,9 +408,9 @@ void PseudoFormatter::else_check(const std::string s, int start)
     }
     else if(at_newline == EB_FALSE && start == formatter_params.indentation_end)
     {
-        //TODO: previous was not brace => oops
         results.add(start, "else is at new line");
     }
+    formatter_params.if_had_blockbracket = false;
 }
 
 void PseudoFormatter::format(const std::string& s, const srchilite::FormatterParams* params)
@@ -482,7 +481,7 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
         if(settings.ext_bool_options["forbid_multiple_expressions_per_line"] == EB_TRUE)
             formatter_params.line_closed = true;
 
-        if(s == "else")
+        if(s == "else" && formatter_params.if_had_blockbracket)
             else_check(s, params->start);
     }
     else if(element == "keyword_with_following_operation_after_braces")
