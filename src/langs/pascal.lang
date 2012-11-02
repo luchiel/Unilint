@@ -19,6 +19,7 @@ varblock = "var|const" nonsensitive
 
 pasbracket = "begin|end" nonsensitive
 
+comment start "//"
 comment delim "(*" "*)" multiline nested
 comment delim "{" "}" multiline nested
 
