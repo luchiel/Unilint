@@ -1,6 +1,6 @@
 type
   a = int;
-  
+
 procedure abaca;
   const
     MILLE: int = 1000;
@@ -9,7 +9,7 @@ procedure abaca;
   begin
     do_nothing();
   end;
-  
+
 var
   freedom: char;
 begin
