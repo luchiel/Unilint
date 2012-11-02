@@ -125,14 +125,8 @@ void PseudoFormatter::token_check(const std::string& s, int start)
     {
         formatter_params.depth++;
 
-        if(bound_to_title)
-        {
-            if(ext_extra_indent == EB_CONSISTENT && start == formatter_params.indentation_end)
-                ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
-
-            if(ext_extra_indent == EB_TRUE)
-                formatter_params.depth++;
-        }
+        if(bound_to_title && ext_extra_indent == EB_TRUE)
+            formatter_params.depth++;
     }
 
     int indentation_size = 1;
@@ -159,9 +153,19 @@ void PseudoFormatter::token_check(const std::string& s, int start)
             {
                 formatter_params.depth--;
                 if(formatter_params.depth == 1)
-                    formatter_params.close_title();
+                    formatter_params.try_close_title();
             }
         }
+    }
+    else if(element == "varblock" || element == "typeblock")
+    {
+        if(ext_extra_indent == EB_CONSISTENT && start == formatter_params.indentation_end && bound_to_title)
+            ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
+
+        if(call_indent_error_check)
+            indent_error_check(
+                formatter_params.depth + (bound_to_title && ext_extra_indent == EB_TRUE ? 1 : 0),
+                indentation_size, start);
     }
     else
     {
