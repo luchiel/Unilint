@@ -64,7 +64,7 @@ public:
     void close_opened_statements();
     void create_title();
     bool try_bind_to_title();
-    void close_title();
+    void try_close_title();
 
     void init_new_line();
 };

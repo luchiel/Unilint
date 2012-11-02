@@ -59,7 +59,10 @@ void PseudoFormatterParams::init_new_line()
 
 void PseudoFormatterParams::create_title()
 {
-    title_opened.push(false);
+    if(title_opened.size() == 0)
+        title_opened.push(false);
+    else
+        title_opened.top() = false;
 }
 
 bool PseudoFormatterParams::try_bind_to_title()
@@ -75,7 +78,8 @@ bool PseudoFormatterParams::try_bind_to_title()
     return false;
 }
 
-void PseudoFormatterParams::close_title()
+void PseudoFormatterParams::try_close_title()
 {
-    title_opened.pop();
+    if(title_opened.size() != 0)
+        title_opened.pop();
 }
