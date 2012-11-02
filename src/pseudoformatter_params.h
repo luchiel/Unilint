@@ -5,6 +5,7 @@
 #include <stack>
 #include <string>
 #include "settings.h"
+#include "language.h"
 
 enum Section { S_TYPE, S_VAR, S_CODE };
 
@@ -14,6 +15,7 @@ private:
     std::stack<int> open_if_count_before_blockbracket;
     std::stack<int> close_on_end;
     std::stack< std::pair<int, bool> > if_depth;
+    std::stack<bool> title_opened;
 
 public:
     int depth;
@@ -34,6 +36,7 @@ public:
     bool if_had_blockbracket;
 
     std::stack<Section> section;
+    Language language;
 
     PseudoFormatterParams():
         depth(0),
@@ -59,6 +62,9 @@ public:
     void restore_last_if_depth();
     void open_statement();
     void close_opened_statements();
+    void create_title();
+    bool try_bind_to_title();
+    void close_title();
 
     void init_new_line();
 };

@@ -156,6 +156,8 @@ void Checker::process_file()
     srchilite::FormatterParams params;
     highlighter.setFormatterParams(&params);
 
+    formatter_params.language = file_language.first;
+
     for(
         formatter_params.current_line_index = 1;
         file_to_process.good();

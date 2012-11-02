@@ -56,3 +56,26 @@ void PseudoFormatterParams::init_new_line()
     operation_per_line_count = 0;
     perform_indentation_size_check = false;
 }
+
+void PseudoFormatterParams::create_title()
+{
+    title_opened.push(false);
+}
+
+bool PseudoFormatterParams::try_bind_to_title()
+{
+    if(language != L_PASCAL)
+        return true;
+
+    if(title_opened.size() != 0)
+    {
+        title_opened.top() = true;
+        return true;
+    }
+    return false;
+}
+
+void PseudoFormatterParams::close_title()
+{
+    title_opened.pop();
+}
