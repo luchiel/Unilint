@@ -15,10 +15,10 @@ procedure a;
   //always at new line, indented
     if a > b then
       begin
-      //new, indented
+        //new, indented
       end
     else begin
-      //same, indented
+        //same, indented
       end;
   end;
 
