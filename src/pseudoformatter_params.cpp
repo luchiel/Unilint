@@ -70,6 +70,9 @@ bool PseudoFormatterParams::try_bind_to_title()
     if(language != L_PASCAL)
         return true;
 
+    if(depth != 0)
+        return true;
+
     if(title_opened.size() != 0)
     {
         title_opened.top() = true;

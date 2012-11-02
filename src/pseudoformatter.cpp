@@ -18,12 +18,12 @@ void PseudoFormatter::indent_error_check(int expected_depth, int scale, int star
 
 void PseudoFormatter::blockbracket_check(const std::string& s, int start)
 {
+    //TODO: nonsensitive func in pascal grammar
     if(is_opening_blockbracket(s))
     {
-        formatter_params.open_blockbracket();
-
+        bool bound_to_title = formatter_params.try_bind_to_title();
         ExtendedBoolean& block_at_newline(settings.ext_bool_options["start_block_at_newline"]);
-        if(block_at_newline == EB_CONSISTENT)
+        if(bound_to_title && block_at_newline == EB_CONSISTENT)
         {
             block_at_newline = start == formatter_params.indentation_end ? EB_TRUE : EB_FALSE;
         }
@@ -31,10 +31,12 @@ void PseudoFormatter::blockbracket_check(const std::string& s, int start)
         {
             results.add(start, s + " is not at new line");
         }
-        else if(block_at_newline == EB_FALSE && start == formatter_params.indentation_end)
+        else if(bound_to_title && block_at_newline == EB_FALSE && start == formatter_params.indentation_end)
         {
             results.add(start, s + " is at new line");
         }
+
+        formatter_params.open_blockbracket();
     }
     else
     {
@@ -118,7 +120,7 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         element != "keyword_declaring_func" &&
         !(element == "blockbracket" && is_opening_blockbracket(s));
 
-    bool bound_to_title = formatter_params.depth != 0 || formatter_params.try_bind_to_title();
+    bool bound_to_title = formatter_params.try_bind_to_title();
     ExtendedBoolean& ext_extra_indent(settings.ext_bool_options["extra_indent_for_blocks"]);
 
     if(is_inside_indented_block_without_end)
