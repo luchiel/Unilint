@@ -34,6 +34,7 @@ public:
 
     bool perform_indentation_size_check;
     bool if_had_blockbracket;
+    bool case_unmatched;
 
     std::stack<Section> section;
     Language language;
@@ -50,7 +51,8 @@ public:
         depth_by_fact(0),
         previous_depth(0),
         perform_indentation_size_check(false),
-        if_had_blockbracket(false)
+        if_had_blockbracket(false),
+        case_unmatched(false)
     {
         close_on_end.push(0);
         section.push(S_CODE);

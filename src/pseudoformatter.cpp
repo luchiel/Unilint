@@ -113,7 +113,6 @@ void PseudoFormatter::token_check(const std::string& s, int start)
             (formatter_params.perform_indentation_size_check ||
             start == 0 && settings.indentation_style != IS_IGNORE);
 
-    //TODO: can begin be inside type?
     bool is_inside_indented_block_without_end =
         formatter_params.section.top() != S_CODE &&
         element != "varblock" && element != "typeblock" &&
@@ -471,9 +470,18 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
         if(formatter_params.depth == 0)
             formatter_params.create_title();
     }
-    else if(element == "keyword_declaring_varblock" || element == "keyword_declaring_codeblock")
+    else if(element == "of")
     {
-        formatter_params.section.push(element == "keyword_declaring_varblock" ? S_VAR : S_CODE);
+        if(formatter_params.case_unmatched)
+        {
+            formatter_params.case_unmatched = false;
+            formatter_params.section.push(S_CODE);
+            formatter_params.open_blockbracket();
+        }
+    }
+    else if(element == "keyword_declaring_varblock")
+    {
+        formatter_params.section.push(S_VAR);
         formatter_params.open_blockbracket();
     }
     else if(element == "classname" || element == "function")
@@ -515,6 +523,10 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
     {
         formatter_params.indented_operation_expected_after_braces = true;
         keyword_and_brace_check(s, params->start);
+    }
+    else if(element == "case")
+    {
+        formatter_params.case_unmatched = true;
     }
     else if(element == "switch_labels")
     {

@@ -135,11 +135,12 @@ void Checker::process_file()
     manager.addFormatter("function", new_formatter("function"));
     manager.addFormatter("identifier", new_formatter("identifier"));
 
+    manager.addFormatter("case", new_formatter("case"));
+    manager.addFormatter("of", new_formatter("of"));
     manager.addFormatter("typeblock", new_formatter("typeblock"));
     manager.addFormatter("varblock", new_formatter("varblock"));
     manager.addFormatter("keyword_declaring_varblock", new_formatter("keyword_declaring_varblock"));
     manager.addFormatter("keyword_declaring_func", new_formatter("keyword_declaring_func"));
-    manager.addFormatter("keyword_declaring_codeblock", new_formatter("keyword_declaring_codeblock"));
 
     manager.addFormatter(
         "keyword_with_following_operation", new_formatter("keyword_with_following_operation"));

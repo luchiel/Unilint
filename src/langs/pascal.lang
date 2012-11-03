@@ -2,7 +2,7 @@
 (keyword_declaring_func,normal,function) =
   `(\<function|procedure)([[:blank:]]+)([[:alnum:]_]+)`
 
-keyword = "alfa|and|array|case|div",
+keyword = "alfa|and|array|div",
       "downto|false|file|for|get|goto|if|in",
       "label|mod|new|not|or|pack|packed|page|program",
       "put|read|readln|repeat|reset|rewrite|set",
@@ -10,8 +10,9 @@ keyword = "alfa|and|array|case|div",
       "published|public|protected|private|strict"
         nonsensitive
 
+case = "case" nonsensitive
+of = "of" nonsensitive
 keyword_declaring_varblock = "class|record" nonsensitive
-keyword_declaring_codeblock = "of" nonsensitive
 keyword_with_following_operation = "do|then|else" nonsensitive
 
 typeblock = "type" nonsensitive
