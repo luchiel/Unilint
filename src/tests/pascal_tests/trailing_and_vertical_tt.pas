@@ -1,7 +1,7 @@
 var
-  c: char;
+  c: array of char;
 begin      
-  case c of
+  case c[0] of
     'a':  b;
     'b':  c;
   end;
