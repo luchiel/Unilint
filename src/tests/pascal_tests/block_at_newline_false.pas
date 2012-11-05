@@ -1,3 +1,7 @@
+procedure break_all;
+begin
+end;
+
 var
   i, j, k: integer;
   l: array [1..10] of integer;

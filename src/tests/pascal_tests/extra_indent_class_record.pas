@@ -16,7 +16,10 @@ function arara(): boolean;
   type
     Akagi =
       record
-          void: integer;
+          void: 
+          record
+            x, y: integer;
+            end;
       end;
   begin
   end;
