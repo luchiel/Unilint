@@ -59,10 +59,8 @@ void PseudoFormatterParams::init_new_line()
 
 void PseudoFormatterParams::create_title()
 {
-    if(title_opened.size() == 0)
-        title_opened.push(false);
-    else
-        title_opened.top() = false;
+    if(title_opened_at_depth.size() == 0 || title_opened_at_depth.top() != -1)
+        title_opened_at_depth.push(-1);
 }
 
 bool PseudoFormatterParams::try_bind_to_title()
@@ -70,19 +68,32 @@ bool PseudoFormatterParams::try_bind_to_title()
     if(language != L_PASCAL)
         return true;
 
-    if(depth != 0)
-        return true;
-
-    if(title_opened.size() != 0)
+    if(title_opened_at_depth.size() != 0)
     {
-        title_opened.top() = true;
-        return true;
+        if(title_opened_at_depth.top() == -1)
+            title_opened_at_depth.top() = depth;
+        return title_opened_at_depth.top() == depth;
     }
     return false;
 }
 
+int PseudoFormatterParams::title_depth()
+{
+    return title_opened_at_depth.size() == 0 ? -1 : title_opened_at_depth.top();
+}
+
 void PseudoFormatterParams::try_close_title()
 {
-    if(title_opened.size() != 0)
-        title_opened.pop();
+    if(title_opened_at_depth.size() != 0 && title_opened_at_depth.top() == depth - 1)
+        title_opened_at_depth.pop();
+}
+
+bool PseudoFormatterParams::is_pascal_main_begin()
+{
+    return language == L_PASCAL && title_depth() == -1 && depth == 0;
+}
+
+bool PseudoFormatterParams::is_pascal_main_end()
+{
+    return language == L_PASCAL && title_depth() == -1 && depth == 1;
 }

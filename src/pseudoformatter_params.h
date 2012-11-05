@@ -15,7 +15,7 @@ private:
     std::stack<int> open_if_count_before_blockbracket;
     std::stack<int> close_on_end;
     std::stack< std::pair<int, bool> > if_depth;
-    std::stack<bool> title_opened;
+    std::stack<int> title_opened_at_depth;
 
 public:
     int depth;
@@ -66,7 +66,11 @@ public:
     void close_opened_statements();
     void create_title();
     bool try_bind_to_title();
+    int title_depth();
     void try_close_title();
+
+    bool is_pascal_main_begin();
+    bool is_pascal_main_end();
 
     void init_new_line();
 };
