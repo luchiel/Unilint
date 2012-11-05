@@ -22,20 +22,24 @@ void PseudoFormatter::blockbracket_check(const std::string& s, int start)
     bool is_keyword_declaring_varblock = element == "keyword_declaring_varblock";
     if(is_opening_blockbracket(s) || is_keyword_declaring_varblock)
     {
-        bool can_check = formatter_params.try_bind_to_title() || is_keyword_declaring_varblock;
-
-        ExtendedBoolean& block_at_newline(settings.ext_bool_options["start_block_at_newline"]);
-        if(can_check && block_at_newline == EB_CONSISTENT)
+        //pascal: main and func/proc's begin are always at newline
+        if(
+            formatter_params.language != L_PASCAL ||
+            (!formatter_params.try_bind_to_title() && formatter_params.depth != 0))
         {
-            block_at_newline = start == formatter_params.indentation_end ? EB_TRUE : EB_FALSE;
-        }
-        else if(block_at_newline == EB_TRUE && start != formatter_params.indentation_end)
-        {
-            results.add(start, s + " is not at new line");
-        }
-        else if(can_check && block_at_newline == EB_FALSE && start == formatter_params.indentation_end)
-        {
-            results.add(start, s + " is at new line");
+            ExtendedBoolean& block_at_newline(settings.ext_bool_options["start_block_at_newline"]);
+            if(block_at_newline == EB_CONSISTENT)
+            {
+                block_at_newline = start == formatter_params.indentation_end ? EB_TRUE : EB_FALSE;
+            }
+            else if(block_at_newline == EB_TRUE && start != formatter_params.indentation_end)
+            {
+                results.add(start, s + " is not at new line");
+            }
+            else if(block_at_newline == EB_FALSE && start == formatter_params.indentation_end)
+            {
+                results.add(start, s + " is at new line");
+            }
         }
 
         formatter_params.open_blockbracket();
@@ -82,6 +86,8 @@ void PseudoFormatter::whitespace_sequence_check(const std::string& s, int start)
 
 void PseudoFormatter::token_check(const std::string& s, int start)
 {
+    assert(formatter_params.depth >= 0);
+
     if(s == "else")
     {
         formatter_params.close_opened_statements();
@@ -115,17 +121,26 @@ void PseudoFormatter::token_check(const std::string& s, int start)
             formatter_params.perform_indentation_size_check ||
             start == 0 && settings.indentation_style != IS_IGNORE);
 
-    bool is_inside_indented_block_without_end =
-        formatter_params.section.top() != S_CODE &&
-        element != "varblock" && element != "typeblock" &&
-        element != "keyword_declaring_func" &&
-        !(element == "blockbracket" && is_opening_blockbracket(s));
+    bool can_be_bound =
+        element == "varblock" ||
+        element == "typeblock" ||
+        element == "keyword_declaring_func" ||
+        element == "blockbracket" && is_opening_blockbracket(s);
+
+    //TODO: class -> functions in type section
+    bool is_inside_indented_block_without_end = formatter_params.section.top() != S_CODE && !can_be_bound;
+
+    if(can_be_bound)
+        formatter_params.try_bind_to_title();
+
+    bool is_unbound_block_or_main_begin =
+        formatter_params.language == L_PASCAL && formatter_params.title_depth() == -1;
 
     ExtendedBoolean& ext_extra_indent(settings.ext_bool_options["extra_indent_for_blocks"]);
 
     if(is_inside_indented_block_without_end)
     {
-        if(formatter_params.try_bind_to_title() && ext_extra_indent == EB_TRUE)
+        if(ext_extra_indent == EB_TRUE && !is_unbound_block_or_main_begin)
             formatter_params.depth++;
 
         formatter_params.depth++;
@@ -147,17 +162,15 @@ void PseudoFormatter::token_check(const std::string& s, int start)
                 ext_extra_indent =
                     formatter_params.depth == 1 && start != indentation_size ? EB_TRUE : EB_FALSE;
             }
-            else if(formatter_params.try_bind_to_title())
+            else if(!formatter_params.is_pascal_main_begin() && !formatter_params.is_pascal_main_end())
             {
                 ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
             }
         }
 
-        bool extra_indent_required = formatter_params.try_bind_to_title() || is_keyword_declaring_varblock;
-
         if(is_opening_blockbracket(s) || is_keyword_declaring_varblock)
         {
-            if(ext_extra_indent == EB_TRUE && extra_indent_required)
+            if(ext_extra_indent == EB_TRUE && !formatter_params.is_pascal_main_begin())
                 formatter_params.depth++;
             if(call_indent_error_check)
                 indent_error_check(formatter_params.depth, indentation_size, start);
@@ -166,12 +179,9 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         {
             if(call_indent_error_check)
                 indent_error_check(formatter_params.depth - 1, indentation_size, start);
-            if(ext_extra_indent == EB_TRUE && extra_indent_required)
-            {
+            if(ext_extra_indent == EB_TRUE && !formatter_params.is_pascal_main_end())
                 formatter_params.depth--;
-                if(formatter_params.depth == 1)
-                    formatter_params.try_close_title();
-            }
+            formatter_params.try_close_title();
         }
     }
     else if(element == "varblock" || element == "typeblock")
@@ -179,7 +189,7 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         if(
             ext_extra_indent == EB_CONSISTENT &&
             start == formatter_params.indentation_end &&
-            formatter_params.try_bind_to_title())
+            !is_unbound_block_or_main_begin)
         {
             ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
         }
@@ -187,7 +197,7 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         if(call_indent_error_check)
             indent_error_check(
                 formatter_params.depth + (
-                    formatter_params.try_bind_to_title() && ext_extra_indent == EB_TRUE ? 1 : 0),
+                    !is_unbound_block_or_main_begin && ext_extra_indent == EB_TRUE ? 1 : 0),
                 indentation_size, start);
     }
     else
@@ -206,7 +216,7 @@ void PseudoFormatter::token_check(const std::string& s, int start)
     {
         formatter_params.depth--;
 
-        if(formatter_params.try_bind_to_title() && ext_extra_indent == EB_TRUE)
+        if(ext_extra_indent == EB_TRUE && !is_unbound_block_or_main_begin)
             formatter_params.depth--;
     }
 
@@ -489,8 +499,7 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
     }
     else if(element == "keyword_declaring_func")
     {
-        if(formatter_params.depth == 0)
-            formatter_params.create_title();
+        formatter_params.create_title();
         formatter_params.section.top() = S_CODE;
     }
     else if(element == "of")
