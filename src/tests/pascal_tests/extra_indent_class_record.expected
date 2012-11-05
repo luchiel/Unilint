@@ -1,2 +1,5 @@
+7:11: class is not at new line
+11:12: record is not at new line
 12:1: indent too small
 13:1: indent too small
+19:1: indent too deep

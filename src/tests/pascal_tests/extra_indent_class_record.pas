@@ -11,3 +11,12 @@ type
   Square = record
     a, b, c, d: Point;
   end;
+  
+function arara(): boolean;
+  type
+    Akagi =
+      record
+          void: integer;
+      end;
+  begin
+  end;
