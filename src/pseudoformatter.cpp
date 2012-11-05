@@ -19,11 +19,13 @@ void PseudoFormatter::indent_error_check(int expected_depth, int scale, int star
 void PseudoFormatter::blockbracket_check(const std::string& s, int start)
 {
     //TODO: nonsensitive func in pascal grammar
-    if(is_opening_blockbracket(s))
+    bool is_keyword_declaring_varblock = element == "keyword_declaring_varblock";
+    if(is_opening_blockbracket(s) || is_keyword_declaring_varblock)
     {
-        bool bound_to_title = formatter_params.try_bind_to_title();
+        bool can_check = formatter_params.try_bind_to_title() || is_keyword_declaring_varblock;
+
         ExtendedBoolean& block_at_newline(settings.ext_bool_options["start_block_at_newline"]);
-        if(bound_to_title && block_at_newline == EB_CONSISTENT)
+        if(can_check && block_at_newline == EB_CONSISTENT)
         {
             block_at_newline = start == formatter_params.indentation_end ? EB_TRUE : EB_FALSE;
         }
@@ -31,7 +33,7 @@ void PseudoFormatter::blockbracket_check(const std::string& s, int start)
         {
             results.add(start, s + " is not at new line");
         }
-        else if(bound_to_title && block_at_newline == EB_FALSE && start == formatter_params.indentation_end)
+        else if(can_check && block_at_newline == EB_FALSE && start == formatter_params.indentation_end)
         {
             results.add(start, s + " is at new line");
         }
@@ -109,8 +111,8 @@ void PseudoFormatter::token_check(const std::string& s, int start)
 
     //calculate depth and check indentation
     bool call_indent_error_check =
-        start == formatter_params.indentation_end &&
-            (formatter_params.perform_indentation_size_check ||
+        start == formatter_params.indentation_end && (
+            formatter_params.perform_indentation_size_check ||
             start == 0 && settings.indentation_style != IS_IGNORE);
 
     bool is_inside_indented_block_without_end =
@@ -119,29 +121,43 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         element != "keyword_declaring_func" &&
         !(element == "blockbracket" && is_opening_blockbracket(s));
 
-    bool bound_to_title = formatter_params.try_bind_to_title();
     ExtendedBoolean& ext_extra_indent(settings.ext_bool_options["extra_indent_for_blocks"]);
 
     if(is_inside_indented_block_without_end)
     {
-        formatter_params.depth++;
-
-        if(bound_to_title && ext_extra_indent == EB_TRUE)
+        if(formatter_params.try_bind_to_title() && ext_extra_indent == EB_TRUE)
             formatter_params.depth++;
+
+        formatter_params.depth++;
     }
 
     int indentation_size = 1;
     if(settings.indentation_style == IS_SPACES && settings.indentation_policy == IP_BY_SIZE)
         indentation_size = settings.int_options["indentation_size"];
 
-    if(element == "blockbracket")
-    {
-        if(ext_extra_indent == EB_CONSISTENT && start == formatter_params.indentation_end && bound_to_title)
-            ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
+    bool is_keyword_declaring_varblock = element == "keyword_declaring_varblock";
 
-        if(is_opening_blockbracket(s))
+    if(element == "blockbracket" || is_keyword_declaring_varblock)
+    {
+        if(ext_extra_indent == EB_CONSISTENT && start == formatter_params.indentation_end)
         {
-            if(ext_extra_indent == EB_TRUE && bound_to_title)
+            if(is_keyword_declaring_varblock)
+            {
+                //depth == 1 here, because otherwise we'd have extra_indent set
+                ext_extra_indent =
+                    formatter_params.depth == 1 && start != indentation_size ? EB_TRUE : EB_FALSE;
+            }
+            else if(formatter_params.try_bind_to_title())
+            {
+                ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
+            }
+        }
+
+        bool extra_indent_required = formatter_params.try_bind_to_title() || is_keyword_declaring_varblock;
+
+        if(is_opening_blockbracket(s) || is_keyword_declaring_varblock)
+        {
+            if(ext_extra_indent == EB_TRUE && extra_indent_required)
                 formatter_params.depth++;
             if(call_indent_error_check)
                 indent_error_check(formatter_params.depth, indentation_size, start);
@@ -150,7 +166,7 @@ void PseudoFormatter::token_check(const std::string& s, int start)
         {
             if(call_indent_error_check)
                 indent_error_check(formatter_params.depth - 1, indentation_size, start);
-            if(ext_extra_indent == EB_TRUE && bound_to_title)
+            if(ext_extra_indent == EB_TRUE && extra_indent_required)
             {
                 formatter_params.depth--;
                 if(formatter_params.depth == 1)
@@ -160,12 +176,18 @@ void PseudoFormatter::token_check(const std::string& s, int start)
     }
     else if(element == "varblock" || element == "typeblock")
     {
-        if(ext_extra_indent == EB_CONSISTENT && start == formatter_params.indentation_end && bound_to_title)
+        if(
+            ext_extra_indent == EB_CONSISTENT &&
+            start == formatter_params.indentation_end &&
+            formatter_params.try_bind_to_title())
+        {
             ext_extra_indent = formatter_params.depth == 0 && start != 0 ? EB_TRUE : EB_FALSE;
+        }
 
         if(call_indent_error_check)
             indent_error_check(
-                formatter_params.depth + (bound_to_title && ext_extra_indent == EB_TRUE ? 1 : 0),
+                formatter_params.depth + (
+                    formatter_params.try_bind_to_title() && ext_extra_indent == EB_TRUE ? 1 : 0),
                 indentation_size, start);
     }
     else
@@ -184,7 +206,7 @@ void PseudoFormatter::token_check(const std::string& s, int start)
     {
         formatter_params.depth--;
 
-        if(bound_to_title && ext_extra_indent == EB_TRUE)
+        if(formatter_params.try_bind_to_title() && ext_extra_indent == EB_TRUE)
             formatter_params.depth--;
     }
 
@@ -469,6 +491,7 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
     {
         if(formatter_params.depth == 0)
             formatter_params.create_title();
+        formatter_params.section.top() = S_CODE;
     }
     else if(element == "of")
     {
@@ -482,7 +505,7 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
     else if(element == "keyword_declaring_varblock")
     {
         formatter_params.section.push(S_VAR);
-        formatter_params.open_blockbracket();
+        blockbracket_check(s, params->start);
     }
     else if(element == "classname" || element == "function")
     {
