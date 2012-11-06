@@ -33,6 +33,7 @@ private:
     void keyword_and_brace_check(const std::string& s, int start);
     void else_check(const std::string s, int start);
     bool is_opening_blockbracket(const std::string& s);
+    bool keyword_equal(const std::string& s, const std::string& to);
 
 public:
     //ToDo: inheritance tree, so no ifs in format()

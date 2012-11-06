@@ -2,10 +2,20 @@
 #include "pseudoformatter.h"
 #include "exception.h"
 
+bool PseudoFormatter::keyword_equal(const std::string& s, const std::string& to)
+{
+    if(formatter_params.language == L_PASCAL)
+    {
+        std::string s_lowercase(s);
+        std::transform(s.begin(), s.end(), s_lowercase.begin(), ::tolower);
+        return s_lowercase == to;
+    }
+    return s == to;
+}
+
 bool PseudoFormatter::is_opening_blockbracket(const std::string& s)
 {
-    //TODO: Begin, BEGIN etc
-    return s == "{" || s == "begin";
+    return s == "{" || keyword_equal(s, "begin");
 }
 
 void PseudoFormatter::indent_error_check(int expected_depth, int scale, int start)
@@ -88,7 +98,7 @@ void PseudoFormatter::token_check(const std::string& s, int start)
 {
     assert(formatter_params.depth >= 0);
 
-    if(s == "else")
+    if(keyword_equal(s, "else"))
     {
         formatter_params.close_opened_statements();
 
@@ -220,9 +230,8 @@ void PseudoFormatter::token_check(const std::string& s, int start)
             formatter_params.depth--;
     }
 
-    if(s == "if")
+    if(keyword_equal(s, "if"))
     {
-        //TODO: nonsensitive
         formatter_params.save_if_depth();
     }
 
@@ -278,15 +287,12 @@ void PseudoFormatter::spaces_in_unibrackets_check(char c, int start, int offset)
     }
     else if(spaces_inside == EB_TRUE && formatter_params.current_line[start + offset] != ' ')
     {
-        results.add(
-            start + offset,
-            std::string("no space ") + (offset > 0 ? "after " : "before ") + c);
+        results.add(start + offset, std::string("no space ") + (offset > 0 ? "after " : "before ") + c);
     }
     else if(spaces_inside == EB_FALSE && formatter_params.current_line[start + offset] == ' ')
     {
         results.add(
-            start + offset,
-            std::string("unexpected space ") + (offset > 0 ? "after " : "before ") + c);
+            start + offset, std::string("unexpected space ") + (offset > 0 ? "after " : "before ") + c);
     }
 }
 
@@ -548,7 +554,7 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
         if(settings.ext_bool_options["forbid_multiple_expressions_per_line"] == EB_TRUE)
             formatter_params.line_closed = true;
 
-        if(s == "else" && formatter_params.if_had_blockbracket)
+        if(keyword_equal(s, "else") && formatter_params.if_had_blockbracket)
             else_check(s, params->start);
     }
     else if(element == "keyword_with_following_operation_after_braces")
