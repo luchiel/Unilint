@@ -1,4 +1,4 @@
-function camelStyle: boolean;
+Function camelStyle: boolean;
 function PascalStyle(var j: integer): boolean;
 function underscore_style: boolean;
 function CAPS_UNDERSCORE_STYLE: boolean;
@@ -10,7 +10,7 @@ var
 begin
 end;
 
-procedure oCamel(x: integer);
+ProcedURE oCamel(x: integer);
 procedure PascalMe;
 procedure un_sco;
 procedure CAPS_UN_SCO;

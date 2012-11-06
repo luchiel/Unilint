@@ -1,6 +1,6 @@
 #added for functions and procedures
 (keyword_declaring_func,normal,function) =
-  `(\<function|procedure)([[:blank:]]+)([[:alnum:]_]+)`
+  `((?i)function|procedure)([[:blank:]]+)([[:alnum:]_]+)`
 
 keyword = "alfa|and|array|div",
       "downto|false|file|for|get|goto|if|in",

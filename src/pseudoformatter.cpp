@@ -28,7 +28,6 @@ void PseudoFormatter::indent_error_check(int expected_depth, int scale, int star
 
 void PseudoFormatter::blockbracket_check(const std::string& s, int start)
 {
-    //TODO: nonsensitive func in pascal grammar
     bool is_keyword_declaring_varblock = element == "keyword_declaring_varblock";
     if(is_opening_blockbracket(s) || is_keyword_declaring_varblock)
     {
