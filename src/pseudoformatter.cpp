@@ -310,9 +310,9 @@ void PseudoFormatter::unibracket_check(char c, int start)
     }
 }
 
-void PseudoFormatter::brace_check(const std::string& s, int start)
+void PseudoFormatter::brace_check(char c, int start)
 {
-    if(s == "(")
+    if(c == '(')
     {
         formatter_params.braces_opened++;
         formatter_params.depth++;
@@ -323,7 +323,7 @@ void PseudoFormatter::brace_check(const std::string& s, int start)
         formatter_params.depth--;
         if(formatter_params.braces_opened < 0)
         {
-            results.add(start, "unexpected " + s);
+            results.add(start, "unexpected " + c);
         }
         else if(
             formatter_params.braces_opened == 0 &&
@@ -581,7 +581,7 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
     }
     else if(element == "brace")
     {
-        brace_check(s, params->start);
+        brace_check(s[0], params->start);
         unibracket_check(s[0], params->start);
     }
     else if(element == "bracket")

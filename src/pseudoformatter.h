@@ -21,7 +21,7 @@ private:
     std::string element;
 
     void prefix_preprocessing(const std::string& s);
-    void brace_check(const std::string& s, int start);
+    void brace_check(char c, int start);
     void unibracket_check(char c, int start);
     void spaces_in_unibrackets_check(char c, int start, int offset);
     void blockbracket_check(const std::string& s, int start);
