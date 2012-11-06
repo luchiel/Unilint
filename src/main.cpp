@@ -26,8 +26,7 @@ int main(int argc, char* argv[])
     try
     {
         if(argc == 1)
-            throw ProcessCommandLineException(
-                "No arguments found. Use --help");
+            throw ProcessCommandLineException("No arguments found. Use --help");
 
         if(!strcmp(argv[1], "--help"))
         {
@@ -51,12 +50,13 @@ int main(int argc, char* argv[])
             {
                 std::string argument(argv[i]);
                 if(argument[0] != '-' || argument.size() <= 1)
-                    throw ProcessCommandLineException(
-                        "Unrecognized argument: " + argument);
+                    throw ProcessCommandLineException("Unrecognized argument: " + argument);
+
+                if(argument.size() <= 3 || argument[2] != '=')
+                    throw ProcessCommandLineException("=<value> expected after " + argument.substr(0, 2));
 
                 switch(argument[1])
                 {
-                    //TODO: check if name in range!
                     case 's':
                         settings_file = argument.substr(3);
                         break;
@@ -67,12 +67,10 @@ int main(int argc, char* argv[])
                         language = argument.substr(3);
                         break;
                     default:
-                        throw ProcessCommandLineException(
-                            "Unrecognized argument: " + argument);
+                        throw ProcessCommandLineException("Unrecognized argument: " + argument.substr(0, 2));
                 }
             }
-            Checker checker(
-                file_to_process, language, settings_file);
+            Checker checker(file_to_process, language, settings_file);
             checker.process_file();
             checker.output_results_to_file(results_file);
         }
