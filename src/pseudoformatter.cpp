@@ -523,16 +523,22 @@ void PseudoFormatter::format(const std::string& s, const srchilite::FormatterPar
     }
     else if(element == "classname" || element == "function")
     {
+        //TODO: pascal names are case-unsensitive
         NameType name_type = (element == "classname" ? NT_CLASS : NT_FUNCTION);
         auto name_in_list = formatter_params.list_of_names.find(s);
-        //TODO: constructors in C++ are exceptions:
-        //look at other langs and repair them
-        if(name_in_list == formatter_params.list_of_names.end() || name_in_list->second != name_type)
+        if(name_in_list == formatter_params.list_of_names.end())
         {
-            //TODO: map is not multimap. Find out more about func&class namespaces
             formatter_params.list_of_names[s] = name_type;
             name_style_check(s, params->start, (
                 name_type == NT_CLASS ? "class_naming_style" : "function_naming_style"));
+        }
+        else if(name_in_list->second != name_type)
+        {
+            //constructors in C++ are exceptions
+            //assume C++ function with name == classname is a constructor or destructor
+            if(formatter_params.language != L_CPP || name_type == NT_FUNCTION)
+                results.add(params->start, element + " " + s + " was previously declared as " + (
+                    name_type == NT_CLASS ? "function" : "class"));
         }
     }
     else if(element == "identifier")

@@ -36,7 +36,6 @@ private:
     bool keyword_equal(const std::string& s, const std::string& to);
 
 public:
-    //ToDo: inheritance tree, so no ifs in format()
     PseudoFormatter(
         ResultCollector& results_,
         Settings& settings_,
