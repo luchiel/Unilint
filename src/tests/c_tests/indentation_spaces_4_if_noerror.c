@@ -4,7 +4,8 @@ int main()
         if(b)
             if(c)
                 hello();
-            else if(d)
+            else
+                if(d)
                     hello();
                 else
                     hello();

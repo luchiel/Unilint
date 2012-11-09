@@ -9,7 +9,7 @@ export CPATH = $(CURDIR)
 CXXFLAGS += -Wall -Wextra -Wno-unused -Wno-switch -Wno-parentheses -std=c++0x -Wno-sign-compare
 
 all: $(APPNAME)
-	./$(APPNAME) "tests/example.cpp"
+	./$(APPNAME) "tests/c_tests/compulsory_block_braces.c" -r="tests/c_tests/compulsory_block_braces.result" -s="tests/c_tests/compulsory_block_braces.ini"
 
 test: all
 	$(APPNAME) --test

@@ -111,6 +111,12 @@ Settings::Settings(const std::string& settings_file_name_)
         throw LoadSettingsException(
             "indentation_policy cannot be checked when indentation_style is ignored");
 
+    if(indentation_style == IS_TABS)
+    {
+        indentation_policy = IP_BY_SIZE;
+        int_options["indentation_size"] = 1;
+    }
+
     read_eb_options("indentation", "extra_indent_for_blocks");
 
     std::string section("limits");

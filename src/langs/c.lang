@@ -46,7 +46,8 @@ bracket = "[|]"
 
 include "symbols.lang"
 
-cbracket = "{|}"
+cbracket_open = "{"
+cbracket_close = "}"
 
 include "function.lang"
 

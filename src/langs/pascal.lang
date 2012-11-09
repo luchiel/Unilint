@@ -18,7 +18,8 @@ keyword_with_following_operation = "do|then|else" nonsensitive
 typeblock = "type" nonsensitive
 varblock = "var|const" nonsensitive
 
-pasbracket = "begin|end" nonsensitive
+pasbracket_open = "begin" nonsensitive
+pasbracket_close = "end" nonsensitive
 
 comment start "//"
 comment delim "(*" "*)" multiline nested
