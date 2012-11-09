@@ -1,14 +1,15 @@
-#ifndef PSEUDOFORMATTER_PARAMS_H
-#define PSEUDOFORMATTER_PARAMS_H
+#ifndef ENVIRONMENT_H
+#define ENVIRONMENT_H
 
 #include <map>
 #include <stack>
 #include <string>
 #include <vector>
-#include "settings.h"
 #include "language.h"
 
 enum Section { S_TYPE, S_VAR, S_CODE };
+
+enum NameType { NT_CLASS, NT_FUNCTION, NT_VARIABLE };
 
 struct Environment
 {
